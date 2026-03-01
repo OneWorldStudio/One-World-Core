@@ -1,0 +1,929 @@
+﻿Classfile jar:file:///C:/Users/Unitei/Desktop/OneWorldCore/OneWorldServer/plugins/AxiomPaperPlugin-5.0.3-for-MC1.20.1.jar!/com/moulberry/axiom/WorldExtension.class
+  Last modified 23 ���. 2025?�.; size 12625 bytes
+  SHA-256 checksum 002507d1241bf653492705484acefbd1dbfa8966be32a3f43d378f261d110a20
+  Compiled from "WorldExtension.java"
+public class com.moulberry.axiom.WorldExtension
+  minor version: 0
+  major version: 61
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+  this_class: #2                          // com/moulberry/axiom/WorldExtension
+  super_class: #4                         // java/lang/Object
+  interfaces: 0, fields: 5, methods: 16, attributes: 3
+Constant pool:
+    #1 = Utf8               com/moulberry/axiom/WorldExtension
+    #2 = Class              #1            // com/moulberry/axiom/WorldExtension
+    #3 = Utf8               java/lang/Object
+    #4 = Class              #3            // java/lang/Object
+    #5 = Utf8               WorldExtension.java
+    #6 = Utf8               net/minecraft/network/PacketDataSerializer$b
+    #7 = Class              #6            // net/minecraft/network/PacketDataSerializer$b
+    #8 = Utf8               net/minecraft/network/PacketDataSerializer
+    #9 = Class              #8            // net/minecraft/network/PacketDataSerializer
+   #10 = Utf8               b
+   #11 = Utf8               java/lang/invoke/MethodHandles$Lookup
+   #12 = Class              #11           // java/lang/invoke/MethodHandles$Lookup
+   #13 = Utf8               java/lang/invoke/MethodHandles
+   #14 = Class              #13           // java/lang/invoke/MethodHandles
+   #15 = Utf8               Lookup
+   #16 = Utf8               extensions
+   #17 = Utf8               Ljava/util/Map;
+   #18 = Utf8               Ljava/util/Map<Lnet/minecraft/resources/ResourceKey<Lnet/minecraft/world/level/World;>;Lcom/moulberry/axiom/WorldExtension;>;
+   #19 = Utf8               level
+   #20 = Utf8               Lnet/minecraft/server/level/WorldServer;
+   #21 = Utf8               pendingChunksToSend
+   #22 = Utf8               Lit/unimi/dsi/fastutil/longs/LongSet;
+   #23 = Utf8               pendingChunksToLight
+   #24 = Utf8               previousMarkerData
+   #25 = Utf8               Ljava/util/Map<Ljava/util/UUID;Lcom/moulberry/axiom/marker/MarkerData;>;
+   #26 = Utf8               <init>
+   #27 = Utf8               ()V
+   #28 = NameAndType        #26:#27       // "<init>":()V
+   #29 = Methodref          #4.#28        // java/lang/Object."<init>":()V
+   #30 = Utf8               it/unimi/dsi/fastutil/longs/LongOpenHashSet
+   #31 = Class              #30           // it/unimi/dsi/fastutil/longs/LongOpenHashSet
+   #32 = Methodref          #31.#28       // it/unimi/dsi/fastutil/longs/LongOpenHashSet."<init>":()V
+   #33 = NameAndType        #21:#22       // pendingChunksToSend:Lit/unimi/dsi/fastutil/longs/LongSet;
+   #34 = Fieldref           #2.#33        // com/moulberry/axiom/WorldExtension.pendingChunksToSend:Lit/unimi/dsi/fastutil/longs/LongSet;
+   #35 = NameAndType        #23:#22       // pendingChunksToLight:Lit/unimi/dsi/fastutil/longs/LongSet;
+   #36 = Fieldref           #2.#35        // com/moulberry/axiom/WorldExtension.pendingChunksToLight:Lit/unimi/dsi/fastutil/longs/LongSet;
+   #37 = Utf8               java/util/HashMap
+   #38 = Class              #37           // java/util/HashMap
+   #39 = Methodref          #38.#28       // java/util/HashMap."<init>":()V
+   #40 = NameAndType        #24:#17       // previousMarkerData:Ljava/util/Map;
+   #41 = Fieldref           #2.#40        // com/moulberry/axiom/WorldExtension.previousMarkerData:Ljava/util/Map;
+   #42 = Utf8               this
+   #43 = Utf8               Lcom/moulberry/axiom/WorldExtension;
+   #44 = Utf8               get
+   #45 = Utf8               (Lnet/minecraft/server/level/WorldServer;)Lcom/moulberry/axiom/WorldExtension;
+   #46 = Utf8               serverLevel
+   #47 = NameAndType        #16:#17       // extensions:Ljava/util/Map;
+   #48 = Fieldref           #2.#47        // com/moulberry/axiom/WorldExtension.extensions:Ljava/util/Map;
+   #49 = Utf8               net/minecraft/server/level/WorldServer
+   #50 = Class              #49           // net/minecraft/server/level/WorldServer
+   #51 = Utf8               ac
+   #52 = Utf8               ()Lnet/minecraft/resources/ResourceKey;
+   #53 = NameAndType        #51:#52       // ac:()Lnet/minecraft/resources/ResourceKey;
+   #54 = Methodref          #50.#53       // net/minecraft/server/level/WorldServer.ac:()Lnet/minecraft/resources/ResourceKey;
+   #55 = Utf8               (Ljava/lang/Object;)Ljava/lang/Object;
+   #56 = MethodType         #55           //  (Ljava/lang/Object;)Ljava/lang/Object;
+   #57 = Utf8               lambda$get$0
+   #58 = Utf8               (Lnet/minecraft/resources/ResourceKey;)Lcom/moulberry/axiom/WorldExtension;
+   #59 = NameAndType        #57:#58       // lambda$get$0:(Lnet/minecraft/resources/ResourceKey;)Lcom/moulberry/axiom/WorldExtension;
+   #60 = Methodref          #2.#59        // com/moulberry/axiom/WorldExtension.lambda$get$0:(Lnet/minecraft/resources/ResourceKey;)Lcom/moulberry/axiom/WorldExtension;
+   #61 = MethodHandle       6:#60         // REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$get$0:(Lnet/minecraft/resources/ResourceKey;)Lcom/moulberry/axiom/WorldExtension;
+   #62 = MethodType         #58           //  (Lnet/minecraft/resources/ResourceKey;)Lcom/moulberry/axiom/WorldExtension;
+   #63 = Utf8               java/lang/invoke/LambdaMetafactory
+   #64 = Class              #63           // java/lang/invoke/LambdaMetafactory
+   #65 = Utf8               metafactory
+   #66 = Utf8               (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+   #67 = NameAndType        #65:#66       // metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+   #68 = Methodref          #64.#67       // java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+   #69 = MethodHandle       6:#68         // REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+   #70 = Utf8               apply
+   #71 = Utf8               ()Ljava/util/function/Function;
+   #72 = NameAndType        #70:#71       // apply:()Ljava/util/function/Function;
+   #73 = InvokeDynamic      #0:#72        // #0:apply:()Ljava/util/function/Function;
+   #74 = Utf8               java/util/Map
+   #75 = Class              #74           // java/util/Map
+   #76 = Utf8               computeIfAbsent
+   #77 = Utf8               (Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
+   #78 = NameAndType        #76:#77       // computeIfAbsent:(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
+   #79 = InterfaceMethodref #75.#78       // java/util/Map.computeIfAbsent:(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
+   #80 = NameAndType        #19:#20       // level:Lnet/minecraft/server/level/WorldServer;
+   #81 = Fieldref           #2.#80        // com/moulberry/axiom/WorldExtension.level:Lnet/minecraft/server/level/WorldServer;
+   #82 = Utf8               extension
+   #83 = Utf8               onPlayerJoin
+   #84 = Utf8               (Lorg/bukkit/World;Lorg/bukkit/entity/Player;)V
+   #85 = Utf8               world
+   #86 = Utf8               player
+   #87 = Utf8               org/bukkit/craftbukkit/v1_20_R1/CraftWorld
+   #88 = Class              #87           // org/bukkit/craftbukkit/v1_20_R1/CraftWorld
+   #89 = Utf8               getHandle
+   #90 = Utf8               ()Lnet/minecraft/server/level/WorldServer;
+   #91 = NameAndType        #89:#90       // getHandle:()Lnet/minecraft/server/level/WorldServer;
+   #92 = Methodref          #88.#91       // org/bukkit/craftbukkit/v1_20_R1/CraftWorld.getHandle:()Lnet/minecraft/server/level/WorldServer;
+   #93 = NameAndType        #44:#45       // get:(Lnet/minecraft/server/level/WorldServer;)Lcom/moulberry/axiom/WorldExtension;
+   #94 = Methodref          #2.#93        // com/moulberry/axiom/WorldExtension.get:(Lnet/minecraft/server/level/WorldServer;)Lcom/moulberry/axiom/WorldExtension;
+   #95 = Utf8               (Lorg/bukkit/entity/Player;)V
+   #96 = NameAndType        #83:#95       // onPlayerJoin:(Lorg/bukkit/entity/Player;)V
+   #97 = Methodref          #2.#96        // com/moulberry/axiom/WorldExtension.onPlayerJoin:(Lorg/bukkit/entity/Player;)V
+   #98 = Utf8               com/moulberry/axiom/AxiomPaper
+   #99 = Class              #98           // com/moulberry/axiom/AxiomPaper
+  #100 = Utf8               PLUGIN
+  #101 = Utf8               Lcom/moulberry/axiom/AxiomPaper;
+  #102 = NameAndType        #100:#101     // PLUGIN:Lcom/moulberry/axiom/AxiomPaper;
+  #103 = Fieldref           #99.#102      // com/moulberry/axiom/AxiomPaper.PLUGIN:Lcom/moulberry/axiom/AxiomPaper;
+  #104 = Utf8               canUseAxiom
+  #105 = Utf8               (Lorg/bukkit/entity/Player;)Z
+  #106 = NameAndType        #104:#105     // canUseAxiom:(Lorg/bukkit/entity/Player;)Z
+  #107 = Methodref          #99.#106      // com/moulberry/axiom/AxiomPaper.canUseAxiom:(Lorg/bukkit/entity/Player;)Z
+  #108 = Utf8               org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer
+  #109 = Class              #108          // org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer
+  #110 = Utf8               ()Lnet/minecraft/server/level/EntityPlayer;
+  #111 = NameAndType        #89:#110      // getHandle:()Lnet/minecraft/server/level/EntityPlayer;
+  #112 = Methodref          #109.#111     // org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer.getHandle:()Lnet/minecraft/server/level/EntityPlayer;
+  #113 = Utf8               com/moulberry/axiom/annotations/ServerAnnotations
+  #114 = Class              #113          // com/moulberry/axiom/annotations/ServerAnnotations
+  #115 = Utf8               sendAll
+  #116 = Utf8               (Lorg/bukkit/World;Lnet/minecraft/server/level/EntityPlayer;)V
+  #117 = NameAndType        #115:#116     // sendAll:(Lorg/bukkit/World;Lnet/minecraft/server/level/EntityPlayer;)V
+  #118 = Methodref          #114.#117     // com/moulberry/axiom/annotations/ServerAnnotations.sendAll:(Lorg/bukkit/World;Lnet/minecraft/server/level/EntityPlayer;)V
+  #119 = Utf8               Lorg/bukkit/World;
+  #120 = Utf8               Lorg/bukkit/entity/Player;
+  #121 = Utf8               tick
+  #122 = Utf8               (Lnet/minecraft/server/MinecraftServer;ZII)V
+  #123 = Utf8               server
+  #124 = Utf8               sendMarkers
+  #125 = Utf8               maxChunkRelightsPerTick
+  #126 = Utf8               maxChunkSendsPerTick
+  #127 = Utf8               keySet
+  #128 = Utf8               ()Ljava/util/Set;
+  #129 = NameAndType        #127:#128     // keySet:()Ljava/util/Set;
+  #130 = InterfaceMethodref #75.#129      // java/util/Map.keySet:()Ljava/util/Set;
+  #131 = Utf8               net/minecraft/server/MinecraftServer
+  #132 = Class              #131          // net/minecraft/server/MinecraftServer
+  #133 = Utf8               E
+  #134 = NameAndType        #133:#128     // E:()Ljava/util/Set;
+  #135 = Methodref          #132.#134     // net/minecraft/server/MinecraftServer.E:()Ljava/util/Set;
+  #136 = Utf8               java/util/Set
+  #137 = Class              #136          // java/util/Set
+  #138 = Utf8               retainAll
+  #139 = Utf8               (Ljava/util/Collection;)Z
+  #140 = NameAndType        #138:#139     // retainAll:(Ljava/util/Collection;)Z
+  #141 = InterfaceMethodref #137.#140     // java/util/Set.retainAll:(Ljava/util/Collection;)Z
+  #142 = Utf8               F
+  #143 = Utf8               ()Ljava/lang/Iterable;
+  #144 = NameAndType        #142:#143     // F:()Ljava/lang/Iterable;
+  #145 = Methodref          #132.#144     // net/minecraft/server/MinecraftServer.F:()Ljava/lang/Iterable;
+  #146 = Utf8               java/lang/Iterable
+  #147 = Class              #146          // java/lang/Iterable
+  #148 = Utf8               iterator
+  #149 = Utf8               ()Ljava/util/Iterator;
+  #150 = NameAndType        #148:#149     // iterator:()Ljava/util/Iterator;
+  #151 = InterfaceMethodref #147.#150     // java/lang/Iterable.iterator:()Ljava/util/Iterator;
+  #152 = Utf8               java/util/Iterator
+  #153 = Class              #152          // java/util/Iterator
+  #154 = Utf8               hasNext
+  #155 = Utf8               ()Z
+  #156 = NameAndType        #154:#155     // hasNext:()Z
+  #157 = InterfaceMethodref #153.#156     // java/util/Iterator.hasNext:()Z
+  #158 = Utf8               next
+  #159 = Utf8               ()Ljava/lang/Object;
+  #160 = NameAndType        #158:#159     // next:()Ljava/lang/Object;
+  #161 = InterfaceMethodref #153.#160     // java/util/Iterator.next:()Ljava/lang/Object;
+  #162 = Utf8               (ZII)V
+  #163 = NameAndType        #121:#162     // tick:(ZII)V
+  #164 = Methodref          #2.#163       // com/moulberry/axiom/WorldExtension.tick:(ZII)V
+  #165 = Utf8               Lnet/minecraft/server/MinecraftServer;
+  #166 = Utf8               Z
+  #167 = Utf8               I
+  #168 = Utf8               sendChunk
+  #169 = Utf8               (II)V
+  #170 = Utf8               cx
+  #171 = Utf8               cz
+  #172 = Utf8               net/minecraft/world/level/ChunkCoordIntPair
+  #173 = Class              #172          // net/minecraft/world/level/ChunkCoordIntPair
+  #174 = Utf8               c
+  #175 = Utf8               (II)J
+  #176 = NameAndType        #174:#175     // c:(II)J
+  #177 = Methodref          #173.#176     // net/minecraft/world/level/ChunkCoordIntPair.c:(II)J
+  #178 = Utf8               it/unimi/dsi/fastutil/longs/LongSet
+  #179 = Class              #178          // it/unimi/dsi/fastutil/longs/LongSet
+  #180 = Utf8               add
+  #181 = Utf8               (J)Z
+  #182 = NameAndType        #180:#181     // add:(J)Z
+  #183 = InterfaceMethodref #179.#182     // it/unimi/dsi/fastutil/longs/LongSet.add:(J)Z
+  #184 = Utf8               lightChunk
+  #185 = Utf8               java/lang/Throwable
+  #186 = Class              #185          // java/lang/Throwable
+  #187 = Utf8               isEmpty
+  #188 = NameAndType        #187:#155     // isEmpty:()Z
+  #189 = InterfaceMethodref #75.#188      // java/util/Map.isEmpty:()Z
+  #190 = Utf8               java/util/ArrayList
+  #191 = Class              #190          // java/util/ArrayList
+  #192 = Utf8               values
+  #193 = Utf8               ()Ljava/util/Collection;
+  #194 = NameAndType        #192:#193     // values:()Ljava/util/Collection;
+  #195 = InterfaceMethodref #75.#194      // java/util/Map.values:()Ljava/util/Collection;
+  #196 = Utf8               (Ljava/util/Collection;)V
+  #197 = NameAndType        #26:#196      // "<init>":(Ljava/util/Collection;)V
+  #198 = Methodref          #191.#197     // java/util/ArrayList."<init>":(Ljava/util/Collection;)V
+  #199 = Utf8               io/netty/buffer/Unpooled
+  #200 = Class              #199          // io/netty/buffer/Unpooled
+  #201 = Utf8               buffer
+  #202 = Utf8               ()Lio/netty/buffer/ByteBuf;
+  #203 = NameAndType        #201:#202     // buffer:()Lio/netty/buffer/ByteBuf;
+  #204 = Methodref          #200.#203     // io/netty/buffer/Unpooled.buffer:()Lio/netty/buffer/ByteBuf;
+  #205 = Utf8               (Lio/netty/buffer/ByteBuf;)V
+  #206 = NameAndType        #26:#205      // "<init>":(Lio/netty/buffer/ByteBuf;)V
+  #207 = Methodref          #9.#206       // net/minecraft/network/PacketDataSerializer."<init>":(Lio/netty/buffer/ByteBuf;)V
+  #208 = Utf8               (Ljava/lang/Object;Ljava/lang/Object;)V
+  #209 = MethodType         #208          //  (Ljava/lang/Object;Ljava/lang/Object;)V
+  #210 = Utf8               com/moulberry/axiom/marker/MarkerData
+  #211 = Class              #210          // com/moulberry/axiom/marker/MarkerData
+  #212 = Utf8               write
+  #213 = Utf8               (Lnet/minecraft/network/PacketDataSerializer;Lcom/moulberry/axiom/marker/MarkerData;)V
+  #214 = NameAndType        #212:#213     // write:(Lnet/minecraft/network/PacketDataSerializer;Lcom/moulberry/axiom/marker/MarkerData;)V
+  #215 = Methodref          #211.#214     // com/moulberry/axiom/marker/MarkerData.write:(Lnet/minecraft/network/PacketDataSerializer;Lcom/moulberry/axiom/marker/MarkerData;)V
+  #216 = MethodHandle       6:#215        // REF_invokeStatic com/moulberry/axiom/marker/MarkerData.write:(Lnet/minecraft/network/PacketDataSerializer;Lcom/moulberry/axiom/marker/MarkerData;)V
+  #217 = MethodType         #213          //  (Lnet/minecraft/network/PacketDataSerializer;Lcom/moulberry/axiom/marker/MarkerData;)V
+  #218 = Utf8               accept
+  #219 = Utf8               ()Lnet/minecraft/network/PacketDataSerializer$b;
+  #220 = NameAndType        #218:#219     // accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+  #221 = InvokeDynamic      #1:#220       // #1:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+  #222 = Utf8               a
+  #223 = Utf8               (Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+  #224 = NameAndType        #222:#223     // a:(Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+  #225 = Methodref          #9.#224       // net/minecraft/network/PacketDataSerializer.a:(Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+  #226 = Utf8               of
+  #227 = NameAndType        #226:#128     // of:()Ljava/util/Set;
+  #228 = InterfaceMethodref #137.#227     // java/util/Set.of:()Ljava/util/Set;
+  #229 = Utf8               lambda$onPlayerJoin$1
+  #230 = Utf8               (Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  #231 = NameAndType        #229:#230     // lambda$onPlayerJoin$1:(Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  #232 = Methodref          #2.#231       // com/moulberry/axiom/WorldExtension.lambda$onPlayerJoin$1:(Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  #233 = MethodHandle       6:#232        // REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$onPlayerJoin$1:(Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  #234 = MethodType         #230          //  (Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  #235 = InvokeDynamic      #2:#220       // #2:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+  #236 = Utf8               io/netty/buffer/ByteBufUtil
+  #237 = Class              #236          // io/netty/buffer/ByteBufUtil
+  #238 = Utf8               getBytes
+  #239 = Utf8               (Lio/netty/buffer/ByteBuf;)[B
+  #240 = NameAndType        #238:#239     // getBytes:(Lio/netty/buffer/ByteBuf;)[B
+  #241 = Methodref          #237.#240     // io/netty/buffer/ByteBufUtil.getBytes:(Lio/netty/buffer/ByteBuf;)[B
+  #242 = Utf8               axiom:marker_data
+  #243 = String             #242          // axiom:marker_data
+  #244 = Utf8               com/moulberry/axiom/VersionHelper
+  #245 = Class              #244          // com/moulberry/axiom/VersionHelper
+  #246 = Utf8               sendCustomPayload
+  #247 = Utf8               (Lorg/bukkit/entity/Player;Ljava/lang/String;[B)V
+  #248 = NameAndType        #246:#247     // sendCustomPayload:(Lorg/bukkit/entity/Player;Ljava/lang/String;[B)V
+  #249 = Methodref          #245.#248     // com/moulberry/axiom/VersionHelper.sendCustomPayload:(Lorg/bukkit/entity/Player;Ljava/lang/String;[B)V
+  #250 = Utf8               chunkPacketBlockController
+  #251 = Utf8               Lcom/destroystokyo/paper/antixray/ChunkPacketBlockController;
+  #252 = NameAndType        #250:#251     // chunkPacketBlockController:Lcom/destroystokyo/paper/antixray/ChunkPacketBlockController;
+  #253 = Fieldref           #50.#252      // net/minecraft/server/level/WorldServer.chunkPacketBlockController:Lcom/destroystokyo/paper/antixray/ChunkPacketBlockController;
+  #254 = Utf8               net/minecraft/server/level/EntityPlayer
+  #255 = Class              #254          // net/minecraft/server/level/EntityPlayer
+  #256 = Utf8               di
+  #257 = Utf8               ()Lnet/minecraft/core/BlockPosition;
+  #258 = NameAndType        #256:#257     // di:()Lnet/minecraft/core/BlockPosition;
+  #259 = Methodref          #255.#258     // net/minecraft/server/level/EntityPlayer.di:()Lnet/minecraft/core/BlockPosition;
+  #260 = Utf8               getChunkIfLoaded
+  #261 = Utf8               (Lnet/minecraft/core/BlockPosition;)Lnet/minecraft/world/level/chunk/Chunk;
+  #262 = NameAndType        #260:#261     // getChunkIfLoaded:(Lnet/minecraft/core/BlockPosition;)Lnet/minecraft/world/level/chunk/Chunk;
+  #263 = Methodref          #50.#262      // net/minecraft/server/level/WorldServer.getChunkIfLoaded:(Lnet/minecraft/core/BlockPosition;)Lnet/minecraft/world/level/chunk/Chunk;
+  #264 = Utf8               com/destroystokyo/paper/antixray/ChunkPacketBlockController
+  #265 = Class              #264          // com/destroystokyo/paper/antixray/ChunkPacketBlockController
+  #266 = Utf8               shouldModify
+  #267 = Utf8               (Lnet/minecraft/server/level/EntityPlayer;Lnet/minecraft/world/level/chunk/Chunk;)Z
+  #268 = NameAndType        #266:#267     // shouldModify:(Lnet/minecraft/server/level/EntityPlayer;Lnet/minecraft/world/level/chunk/Chunk;)Z
+  #269 = Methodref          #265.#268     // com/destroystokyo/paper/antixray/ChunkPacketBlockController.shouldModify:(Lnet/minecraft/server/level/EntityPlayer;Lnet/minecraft/world/level/chunk/Chunk;)Z
+  #270 = Utf8               Axiom: Warning, anti-xray is enabled. This will cause issues when copying blocks. Please turn anti-xray off
+  #271 = String             #270          // Axiom: Warning, anti-xray is enabled. This will cause issues when copying blocks. Please turn anti-xray off
+  #272 = Utf8               net/kyori/adventure/text/Component
+  #273 = Class              #272          // net/kyori/adventure/text/Component
+  #274 = Utf8               text
+  #275 = Utf8               (Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+  #276 = NameAndType        #274:#275     // text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+  #277 = InterfaceMethodref #273.#276     // net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+  #278 = Utf8               net/kyori/adventure/text/format/NamedTextColor
+  #279 = Class              #278          // net/kyori/adventure/text/format/NamedTextColor
+  #280 = Utf8               RED
+  #281 = Utf8               Lnet/kyori/adventure/text/format/NamedTextColor;
+  #282 = NameAndType        #280:#281     // RED:Lnet/kyori/adventure/text/format/NamedTextColor;
+  #283 = Fieldref           #279.#282     // net/kyori/adventure/text/format/NamedTextColor.RED:Lnet/kyori/adventure/text/format/NamedTextColor;
+  #284 = Utf8               color
+  #285 = Utf8               (Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+  #286 = NameAndType        #284:#285     // color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+  #287 = InterfaceMethodref #273.#286     // net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+  #288 = Utf8               org/bukkit/entity/Player
+  #289 = Class              #288          // org/bukkit/entity/Player
+  #290 = Utf8               sendMessage
+  #291 = Utf8               (Lnet/kyori/adventure/text/Component;)V
+  #292 = NameAndType        #290:#291     // sendMessage:(Lnet/kyori/adventure/text/Component;)V
+  #293 = InterfaceMethodref #289.#292     // org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+  #294 = Utf8               markerData
+  #295 = Utf8               Ljava/util/List<Lcom/moulberry/axiom/marker/MarkerData;>;
+  #296 = Utf8               Ljava/util/List;
+  #297 = Utf8               buf
+  #298 = Utf8               Lnet/minecraft/network/PacketDataSerializer;
+  #299 = Utf8               bytes
+  #300 = Utf8               [B
+  #301 = Utf8               Lnet/kyori/adventure/text/Component;
+  #302 = Utf8               serverPlayer
+  #303 = Utf8               Lnet/minecraft/server/level/EntityPlayer;
+  #304 = Utf8               tickMarkers
+  #305 = NameAndType        #304:#27      // tickMarkers:()V
+  #306 = Methodref          #2.#305       // com/moulberry/axiom/WorldExtension.tickMarkers:()V
+  #307 = Utf8               tickChunkRelight
+  #308 = NameAndType        #307:#169     // tickChunkRelight:(II)V
+  #309 = Methodref          #2.#308       // com/moulberry/axiom/WorldExtension.tickChunkRelight:(II)V
+  #310 = Methodref          #191.#28      // java/util/ArrayList."<init>":()V
+  #311 = Utf8               java/util/HashSet
+  #312 = Class              #311          // java/util/HashSet
+  #313 = Methodref          #312.#28      // java/util/HashSet."<init>":()V
+  #314 = Utf8               ()Lnet/minecraft/world/level/entity/LevelEntityGetter;
+  #315 = NameAndType        #133:#314     // E:()Lnet/minecraft/world/level/entity/LevelEntityGetter;
+  #316 = Methodref          #50.#315      // net/minecraft/server/level/WorldServer.E:()Lnet/minecraft/world/level/entity/LevelEntityGetter;
+  #317 = Utf8               net/minecraft/world/level/entity/LevelEntityGetter
+  #318 = Class              #317          // net/minecraft/world/level/entity/LevelEntityGetter
+  #319 = NameAndType        #222:#143     // a:()Ljava/lang/Iterable;
+  #320 = InterfaceMethodref #318.#319     // net/minecraft/world/level/entity/LevelEntityGetter.a:()Ljava/lang/Iterable;
+  #321 = Utf8               java/util/List
+  #322 = Class              #321          // java/util/List
+  #323 = Utf8               net/minecraft/world/entity/Entity
+  #324 = Class              #323          // net/minecraft/world/entity/Entity
+  #325 = Utf8               net/minecraft/world/entity/Marker
+  #326 = Class              #325          // net/minecraft/world/entity/Marker
+  #327 = Utf8               getBukkitEntity
+  #328 = Utf8               ()Lorg/bukkit/craftbukkit/v1_20_R1/entity/CraftEntity;
+  #329 = NameAndType        #327:#328     // getBukkitEntity:()Lorg/bukkit/craftbukkit/v1_20_R1/entity/CraftEntity;
+  #330 = Methodref          #326.#329     // net/minecraft/world/entity/Marker.getBukkitEntity:()Lorg/bukkit/craftbukkit/v1_20_R1/entity/CraftEntity;
+  #331 = Utf8               org/bukkit/entity/Marker
+  #332 = Class              #331          // org/bukkit/entity/Marker
+  #333 = Utf8               com/moulberry/axiom/paperapi/entity/ImplAxiomHiddenEntities
+  #334 = Class              #333          // com/moulberry/axiom/paperapi/entity/ImplAxiomHiddenEntities
+  #335 = Utf8               isMarkerHidden
+  #336 = Utf8               (Lorg/bukkit/entity/Marker;)Z
+  #337 = NameAndType        #335:#336     // isMarkerHidden:(Lorg/bukkit/entity/Marker;)Z
+  #338 = Methodref          #334.#337     // com/moulberry/axiom/paperapi/entity/ImplAxiomHiddenEntities.isMarkerHidden:(Lorg/bukkit/entity/Marker;)Z
+  #339 = Utf8               createFrom
+  #340 = Utf8               (Lnet/minecraft/world/entity/Marker;)Lcom/moulberry/axiom/marker/MarkerData;
+  #341 = NameAndType        #339:#340     // createFrom:(Lnet/minecraft/world/entity/Marker;)Lcom/moulberry/axiom/marker/MarkerData;
+  #342 = Methodref          #211.#341     // com/moulberry/axiom/marker/MarkerData.createFrom:(Lnet/minecraft/world/entity/Marker;)Lcom/moulberry/axiom/marker/MarkerData;
+  #343 = Utf8               ct
+  #344 = Utf8               ()Ljava/util/UUID;
+  #345 = NameAndType        #343:#344     // ct:()Ljava/util/UUID;
+  #346 = Methodref          #326.#345     // net/minecraft/world/entity/Marker.ct:()Ljava/util/UUID;
+  #347 = NameAndType        #44:#55       // get:(Ljava/lang/Object;)Ljava/lang/Object;
+  #348 = InterfaceMethodref #75.#347      // java/util/Map.get:(Ljava/lang/Object;)Ljava/lang/Object;
+  #349 = Utf8               java/util/Objects
+  #350 = Class              #349          // java/util/Objects
+  #351 = Utf8               equals
+  #352 = Utf8               (Ljava/lang/Object;Ljava/lang/Object;)Z
+  #353 = NameAndType        #351:#352     // equals:(Ljava/lang/Object;Ljava/lang/Object;)Z
+  #354 = Methodref          #350.#353     // java/util/Objects.equals:(Ljava/lang/Object;Ljava/lang/Object;)Z
+  #355 = Utf8               put
+  #356 = Utf8               (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+  #357 = NameAndType        #355:#356     // put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+  #358 = InterfaceMethodref #75.#357      // java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+  #359 = Utf8               (Ljava/lang/Object;)Z
+  #360 = NameAndType        #180:#359     // add:(Ljava/lang/Object;)Z
+  #361 = InterfaceMethodref #322.#360     // java/util/List.add:(Ljava/lang/Object;)Z
+  #362 = InterfaceMethodref #137.#360     // java/util/Set.add:(Ljava/lang/Object;)Z
+  #363 = Methodref          #312.#197     // java/util/HashSet."<init>":(Ljava/util/Collection;)V
+  #364 = Utf8               removeAll
+  #365 = NameAndType        #364:#139     // removeAll:(Ljava/util/Collection;)Z
+  #366 = InterfaceMethodref #137.#365     // java/util/Set.removeAll:(Ljava/util/Collection;)Z
+  #367 = InterfaceMethodref #322.#188     // java/util/List.isEmpty:()Z
+  #368 = InterfaceMethodref #137.#188     // java/util/Set.isEmpty:()Z
+  #369 = Utf8               lambda$tickMarkers$2
+  #370 = NameAndType        #369:#230     // lambda$tickMarkers$2:(Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  #371 = Methodref          #2.#370       // com/moulberry/axiom/WorldExtension.lambda$tickMarkers$2:(Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  #372 = MethodHandle       6:#371        // REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$tickMarkers$2:(Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  #373 = InvokeDynamic      #3:#220       // #3:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+  #374 = Utf8               v
+  #375 = Utf8               ()Ljava/util/List;
+  #376 = NameAndType        #374:#375     // v:()Ljava/util/List;
+  #377 = Methodref          #50.#376      // net/minecraft/server/level/WorldServer.v:()Ljava/util/List;
+  #378 = InterfaceMethodref #322.#150     // java/util/List.iterator:()Ljava/util/Iterator;
+  #379 = Class              #300          // "[B"
+  #380 = Utf8               ()Lorg/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer;
+  #381 = NameAndType        #327:#380     // getBukkitEntity:()Lorg/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer;
+  #382 = Methodref          #255.#381     // net/minecraft/server/level/EntityPlayer.getBukkitEntity:()Lorg/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer;
+  #383 = Utf8               sendCustomPayloadToAll
+  #384 = Utf8               (Ljava/util/List;Ljava/lang/String;[B)V
+  #385 = NameAndType        #383:#384     // sendCustomPayloadToAll:(Ljava/util/List;Ljava/lang/String;[B)V
+  #386 = Methodref          #245.#385     // com/moulberry/axiom/VersionHelper.sendCustomPayloadToAll:(Ljava/util/List;Ljava/lang/String;[B)V
+  #387 = Utf8               currentData
+  #388 = Utf8               Lcom/moulberry/axiom/marker/MarkerData;
+  #389 = Utf8               previousData
+  #390 = Utf8               marker
+  #391 = Utf8               Lnet/minecraft/world/entity/Marker;
+  #392 = Utf8               entity
+  #393 = Utf8               Lnet/minecraft/world/entity/Entity;
+  #394 = Utf8               players
+  #395 = Utf8               Ljava/util/List<Lnet/minecraft/server/level/EntityPlayer;>;
+  #396 = Utf8               changedData
+  #397 = Utf8               allMarkers
+  #398 = Utf8               Ljava/util/Set<Ljava/util/UUID;>;
+  #399 = Utf8               Ljava/util/Set;
+  #400 = Utf8               missingUuids
+  #401 = Utf8               k
+  #402 = Utf8               ()Lnet/minecraft/server/level/ChunkProviderServer;
+  #403 = NameAndType        #401:#402     // k:()Lnet/minecraft/server/level/ChunkProviderServer;
+  #404 = Methodref          #50.#403      // net/minecraft/server/level/WorldServer.k:()Lnet/minecraft/server/level/ChunkProviderServer;
+  #405 = Utf8               net/minecraft/server/level/ChunkProviderServer
+  #406 = Class              #405          // net/minecraft/server/level/ChunkProviderServer
+  #407 = Utf8               Lnet/minecraft/server/level/PlayerChunkMap;
+  #408 = NameAndType        #222:#407     // a:Lnet/minecraft/server/level/PlayerChunkMap;
+  #409 = Fieldref           #406.#408     // net/minecraft/server/level/ChunkProviderServer.a:Lnet/minecraft/server/level/PlayerChunkMap;
+  #410 = Utf8               net/minecraft/server/level/PlayerChunkMap
+  #411 = Class              #410          // net/minecraft/server/level/PlayerChunkMap
+  #412 = Utf8               longIterator
+  #413 = Utf8               ()Lit/unimi/dsi/fastutil/longs/LongIterator;
+  #414 = NameAndType        #412:#413     // longIterator:()Lit/unimi/dsi/fastutil/longs/LongIterator;
+  #415 = InterfaceMethodref #179.#414     // it/unimi/dsi/fastutil/longs/LongSet.longIterator:()Lit/unimi/dsi/fastutil/longs/LongIterator;
+  #416 = Utf8               it/unimi/dsi/fastutil/longs/LongIterator
+  #417 = Class              #416          // it/unimi/dsi/fastutil/longs/LongIterator
+  #418 = InterfaceMethodref #417.#156     // it/unimi/dsi/fastutil/longs/LongIterator.hasNext:()Z
+  #419 = Utf8               nextLong
+  #420 = Utf8               ()J
+  #421 = NameAndType        #419:#420     // nextLong:()J
+  #422 = InterfaceMethodref #417.#421     // it/unimi/dsi/fastutil/longs/LongIterator.nextLong:()J
+  #423 = Utf8               (J)V
+  #424 = NameAndType        #26:#423      // "<init>":(J)V
+  #425 = Methodref          #173.#424     // net/minecraft/world/level/ChunkCoordIntPair."<init>":(J)V
+  #426 = Utf8               e
+  #427 = NameAndType        #426:#167     // e:I
+  #428 = Fieldref           #173.#427     // net/minecraft/world/level/ChunkCoordIntPair.e:I
+  #429 = Utf8               f
+  #430 = NameAndType        #429:#167     // f:I
+  #431 = Fieldref           #173.#430     // net/minecraft/world/level/ChunkCoordIntPair.f:I
+  #432 = Utf8               (II)Lnet/minecraft/world/level/chunk/Chunk;
+  #433 = NameAndType        #260:#432     // getChunkIfLoaded:(II)Lnet/minecraft/world/level/chunk/Chunk;
+  #434 = Methodref          #50.#433      // net/minecraft/server/level/WorldServer.getChunkIfLoaded:(II)Lnet/minecraft/world/level/chunk/Chunk;
+  #435 = Utf8               net/minecraft/world/level/chunk/Chunk
+  #436 = Class              #435          // net/minecraft/world/level/chunk/Chunk
+  #437 = Utf8               (Lnet/minecraft/world/level/ChunkCoordIntPair;Z)Ljava/util/List;
+  #438 = NameAndType        #222:#437     // a:(Lnet/minecraft/world/level/ChunkCoordIntPair;Z)Ljava/util/List;
+  #439 = Methodref          #411.#438     // net/minecraft/server/level/PlayerChunkMap.a:(Lnet/minecraft/world/level/ChunkCoordIntPair;Z)Ljava/util/List;
+  #440 = Utf8               net/minecraft/network/protocol/game/ClientboundLevelChunkWithLightPacket
+  #441 = Class              #440          // net/minecraft/network/protocol/game/ClientboundLevelChunkWithLightPacket
+  #442 = Utf8               s_
+  #443 = Utf8               ()Lnet/minecraft/world/level/lighting/LevelLightEngine;
+  #444 = NameAndType        #442:#443     // s_:()Lnet/minecraft/world/level/lighting/LevelLightEngine;
+  #445 = Methodref          #50.#444      // net/minecraft/server/level/WorldServer.s_:()Lnet/minecraft/world/level/lighting/LevelLightEngine;
+  #446 = Utf8               (Lnet/minecraft/world/level/chunk/Chunk;Lnet/minecraft/world/level/lighting/LevelLightEngine;Ljava/util/BitSet;Ljava/util/BitSet;Z)V
+  #447 = NameAndType        #26:#446      // "<init>":(Lnet/minecraft/world/level/chunk/Chunk;Lnet/minecraft/world/level/lighting/LevelLightEngine;Ljava/util/BitSet;Ljava/util/BitSet;Z)V
+  #448 = Methodref          #441.#447     // net/minecraft/network/protocol/game/ClientboundLevelChunkWithLightPacket."<init>":(Lnet/minecraft/world/level/chunk/Chunk;Lnet/minecraft/world/level/lighting/LevelLightEngine;Ljava/util/BitSet;Ljava/util/BitSet;Z)V
+  #449 = Utf8               Lnet/minecraft/server/network/PlayerConnection;
+  #450 = NameAndType        #174:#449     // c:Lnet/minecraft/server/network/PlayerConnection;
+  #451 = Fieldref           #255.#450     // net/minecraft/server/level/EntityPlayer.c:Lnet/minecraft/server/network/PlayerConnection;
+  #452 = Utf8               net/minecraft/server/network/PlayerConnection
+  #453 = Class              #452          // net/minecraft/server/network/PlayerConnection
+  #454 = Utf8               (Lnet/minecraft/network/protocol/Packet;)V
+  #455 = NameAndType        #222:#454     // a:(Lnet/minecraft/network/protocol/Packet;)V
+  #456 = Methodref          #453.#455     // net/minecraft/server/network/PlayerConnection.a:(Lnet/minecraft/network/protocol/Packet;)V
+  #457 = Utf8               remove
+  #458 = NameAndType        #457:#27      // remove:()V
+  #459 = InterfaceMethodref #417.#458     // it/unimi/dsi/fastutil/longs/LongIterator.remove:()V
+  #460 = Utf8               clear
+  #461 = NameAndType        #460:#27      // clear:()V
+  #462 = InterfaceMethodref #179.#461     // it/unimi/dsi/fastutil/longs/LongSet.clear:()V
+  #463 = Utf8               ()Lnet/minecraft/server/level/LightEngineThreaded;
+  #464 = NameAndType        #222:#463     // a:()Lnet/minecraft/server/level/LightEngineThreaded;
+  #465 = Methodref          #406.#464     // net/minecraft/server/level/ChunkProviderServer.a:()Lnet/minecraft/server/level/LightEngineThreaded;
+  #466 = Utf8               (Ljava/lang/Object;)V
+  #467 = MethodType         #466          //  (Ljava/lang/Object;)V
+  #468 = Utf8               lambda$tickChunkRelight$3
+  #469 = Utf8               (Lnet/minecraft/world/level/ChunkCoordIntPair;)V
+  #470 = NameAndType        #468:#469     // lambda$tickChunkRelight$3:(Lnet/minecraft/world/level/ChunkCoordIntPair;)V
+  #471 = Methodref          #2.#470       // com/moulberry/axiom/WorldExtension.lambda$tickChunkRelight$3:(Lnet/minecraft/world/level/ChunkCoordIntPair;)V
+  #472 = MethodHandle       6:#471        // REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$tickChunkRelight$3:(Lnet/minecraft/world/level/ChunkCoordIntPair;)V
+  #473 = MethodType         #469          //  (Lnet/minecraft/world/level/ChunkCoordIntPair;)V
+  #474 = Utf8               ()Ljava/util/function/Consumer;
+  #475 = NameAndType        #218:#474     // accept:()Ljava/util/function/Consumer;
+  #476 = InvokeDynamic      #4:#475       // #4:accept:()Ljava/util/function/Consumer;
+  #477 = Utf8               (I)V
+  #478 = MethodType         #477          //  (I)V
+  #479 = Utf8               lambda$tickChunkRelight$4
+  #480 = NameAndType        #479:#477     // lambda$tickChunkRelight$4:(I)V
+  #481 = Methodref          #2.#480       // com/moulberry/axiom/WorldExtension.lambda$tickChunkRelight$4:(I)V
+  #482 = MethodHandle       6:#481        // REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$tickChunkRelight$4:(I)V
+  #483 = Utf8               ()Ljava/util/function/IntConsumer;
+  #484 = NameAndType        #218:#483     // accept:()Ljava/util/function/IntConsumer;
+  #485 = InvokeDynamic      #5:#484       // #5:accept:()Ljava/util/function/IntConsumer;
+  #486 = Utf8               net/minecraft/server/level/LightEngineThreaded
+  #487 = Class              #486          // net/minecraft/server/level/LightEngineThreaded
+  #488 = Utf8               relight
+  #489 = Utf8               (Ljava/util/Set;Ljava/util/function/Consumer;Ljava/util/function/IntConsumer;)I
+  #490 = NameAndType        #488:#489     // relight:(Ljava/util/Set;Ljava/util/function/Consumer;Ljava/util/function/IntConsumer;)I
+  #491 = Methodref          #487.#490     // net/minecraft/server/level/LightEngineThreaded.relight:(Ljava/util/Set;Ljava/util/function/Consumer;Ljava/util/function/IntConsumer;)I
+  #492 = Utf8               chunkPos
+  #493 = Utf8               Lnet/minecraft/world/level/ChunkCoordIntPair;
+  #494 = Utf8               chunk
+  #495 = Utf8               Lnet/minecraft/world/level/chunk/Chunk;
+  #496 = Utf8               packet
+  #497 = Utf8               Lnet/minecraft/network/protocol/game/ClientboundLevelChunkWithLightPacket;
+  #498 = Utf8               chunkMap
+  #499 = Utf8               Lit/unimi/dsi/fastutil/longs/LongIterator;
+  #500 = Utf8               chunkSet
+  #501 = Utf8               Ljava/util/Set<Lnet/minecraft/world/level/ChunkCoordIntPair;>;
+  #502 = Utf8               count
+  #503 = Utf8               pos
+  #504 = Utf8               uuid
+  #505 = Utf8               (Ljava/util/UUID;)Lnet/minecraft/network/PacketDataSerializer;
+  #506 = NameAndType        #222:#505     // a:(Ljava/util/UUID;)Lnet/minecraft/network/PacketDataSerializer;
+  #507 = Methodref          #9.#506       // net/minecraft/network/PacketDataSerializer.a:(Ljava/util/UUID;)Lnet/minecraft/network/PacketDataSerializer;
+  #508 = Utf8               Ljava/util/UUID;
+  #509 = Methodref          #2.#28        // com/moulberry/axiom/WorldExtension."<init>":()V
+  #510 = Utf8               Lnet/minecraft/resources/ResourceKey;
+  #511 = Utf8               <clinit>
+  #512 = Utf8               Signature
+  #513 = Utf8               Code
+  #514 = Utf8               LineNumberTable
+  #515 = Utf8               LocalVariableTable
+  #516 = Utf8               MethodParameters
+  #517 = Utf8               StackMapTable
+  #518 = Utf8               LocalVariableTypeTable
+  #519 = Utf8               InnerClasses
+  #520 = Utf8               SourceFile
+  #521 = Utf8               BootstrapMethods
+{
+  public com.moulberry.axiom.WorldExtension();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=3, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #29                 // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: new           #31                 // class it/unimi/dsi/fastutil/longs/LongOpenHashSet
+         8: dup
+         9: invokespecial #32                 // Method it/unimi/dsi/fastutil/longs/LongOpenHashSet."<init>":()V
+        12: putfield      #34                 // Field pendingChunksToSend:Lit/unimi/dsi/fastutil/longs/LongSet;
+        15: aload_0
+        16: new           #31                 // class it/unimi/dsi/fastutil/longs/LongOpenHashSet
+        19: dup
+        20: invokespecial #32                 // Method it/unimi/dsi/fastutil/longs/LongOpenHashSet."<init>":()V
+        23: putfield      #36                 // Field pendingChunksToLight:Lit/unimi/dsi/fastutil/longs/LongSet;
+        26: aload_0
+        27: new           #38                 // class java/util/HashMap
+        30: dup
+        31: invokespecial #39                 // Method java/util/HashMap."<init>":()V
+        34: putfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+        37: return
+      LineNumberTable:
+        line 30: 0
+        line 59: 4
+        line 60: 15
+        line 61: 26
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      38     0  this   Lcom/moulberry/axiom/WorldExtension;
+
+  public static com.moulberry.axiom.WorldExtension get(net.minecraft.server.level.WorldServer);
+    descriptor: (Lnet/minecraft/server/level/WorldServer;)Lcom/moulberry/axiom/WorldExtension;
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=3, locals=2, args_size=1
+         0: getstatic     #48                 // Field extensions:Ljava/util/Map;
+         3: aload_0
+         4: invokevirtual #54                 // Method net/minecraft/server/level/WorldServer.ac:()Lnet/minecraft/resources/ResourceKey;
+         7: invokedynamic #73,  0             // InvokeDynamic #0:apply:()Ljava/util/function/Function;
+        12: invokeinterface #79,  3           // InterfaceMethod java/util/Map.computeIfAbsent:(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
+        17: checkcast     #2                  // class com/moulberry/axiom/WorldExtension
+        20: astore_1
+        21: aload_1
+        22: aload_0
+        23: putfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+        26: aload_1
+        27: areturn
+      LineNumberTable:
+        line 35: 0
+        line 36: 21
+        line 37: 26
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      28     0 serverLevel   Lnet/minecraft/server/level/WorldServer;
+           21       7     1 extension   Lcom/moulberry/axiom/WorldExtension;
+    MethodParameters:
+      Name                           Flags
+      serverLevel
+
+  public static void onPlayerJoin(org.bukkit.World, org.bukkit.entity.Player);
+    descriptor: (Lorg/bukkit/World;Lorg/bukkit/entity/Player;)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=3, args_size=2
+         0: aload_0
+         1: checkcast     #88                 // class org/bukkit/craftbukkit/v1_20_R1/CraftWorld
+         4: invokevirtual #92                 // Method org/bukkit/craftbukkit/v1_20_R1/CraftWorld.getHandle:()Lnet/minecraft/server/level/WorldServer;
+         7: astore_2
+         8: aload_2
+         9: invokestatic  #94                 // Method get:(Lnet/minecraft/server/level/WorldServer;)Lcom/moulberry/axiom/WorldExtension;
+        12: aload_1
+        13: invokevirtual #97                 // Method onPlayerJoin:(Lorg/bukkit/entity/Player;)V
+        16: getstatic     #103                // Field com/moulberry/axiom/AxiomPaper.PLUGIN:Lcom/moulberry/axiom/AxiomPaper;
+        19: aload_1
+        20: invokevirtual #107                // Method com/moulberry/axiom/AxiomPaper.canUseAxiom:(Lorg/bukkit/entity/Player;)Z
+        23: ifeq          37
+        26: aload_0
+        27: aload_1
+        28: checkcast     #109                // class org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer
+        31: invokevirtual #112                // Method org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer.getHandle:()Lnet/minecraft/server/level/EntityPlayer;
+        34: invokestatic  #118                // Method com/moulberry/axiom/annotations/ServerAnnotations.sendAll:(Lorg/bukkit/World;Lnet/minecraft/server/level/EntityPlayer;)V
+        37: return
+      StackMapTable: number_of_entries = 1
+        frame_type = 252 /* append */
+          offset_delta = 37
+          locals = [ class net/minecraft/server/level/WorldServer ]
+      LineNumberTable:
+        line 41: 0
+        line 42: 8
+        line 44: 16
+        line 45: 26
+        line 47: 37
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      38     0 world   Lorg/bukkit/World;
+            0      38     1 player   Lorg/bukkit/entity/Player;
+            8      30     2 level   Lnet/minecraft/server/level/WorldServer;
+    MethodParameters:
+      Name                           Flags
+      world
+      player
+
+  public static void tick(net.minecraft.server.MinecraftServer, boolean, int, int);
+    descriptor: (Lnet/minecraft/server/MinecraftServer;ZII)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=4, locals=6, args_size=4
+         0: getstatic     #48                 // Field extensions:Ljava/util/Map;
+         3: invokeinterface #130,  1          // InterfaceMethod java/util/Map.keySet:()Ljava/util/Set;
+         8: aload_0
+         9: invokevirtual #135                // Method net/minecraft/server/MinecraftServer.E:()Ljava/util/Set;
+        12: invokeinterface #141,  2          // InterfaceMethod java/util/Set.retainAll:(Ljava/util/Collection;)Z
+        17: pop
+        18: aload_0
+        19: invokevirtual #145                // Method net/minecraft/server/MinecraftServer.F:()Ljava/lang/Iterable;
+        22: invokeinterface #151,  1          // InterfaceMethod java/lang/Iterable.iterator:()Ljava/util/Iterator;
+        27: astore        4
+        29: aload         4
+        31: invokeinterface #157,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+        36: ifeq          65
+        39: aload         4
+        41: invokeinterface #161,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+        46: checkcast     #50                 // class net/minecraft/server/level/WorldServer
+        49: astore        5
+        51: aload         5
+        53: invokestatic  #94                 // Method get:(Lnet/minecraft/server/level/WorldServer;)Lcom/moulberry/axiom/WorldExtension;
+        56: iload_1
+        57: iload_2
+        58: iload_3
+        59: invokevirtual #164                // Method tick:(ZII)V
+        62: goto          29
+        65: return
+      StackMapTable: number_of_entries = 2
+        frame_type = 252 /* append */
+          offset_delta = 29
+          locals = [ class java/util/Iterator ]
+        frame_type = 250 /* chop */
+          offset_delta = 35
+      LineNumberTable:
+        line 50: 0
+        line 52: 18
+        line 53: 51
+        line 54: 62
+        line 55: 65
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+           51      11     5 level   Lnet/minecraft/server/level/WorldServer;
+            0      66     0 server   Lnet/minecraft/server/MinecraftServer;
+            0      66     1 sendMarkers   Z
+            0      66     2 maxChunkRelightsPerTick   I
+            0      66     3 maxChunkSendsPerTick   I
+    MethodParameters:
+      Name                           Flags
+      server
+      sendMarkers
+      maxChunkRelightsPerTick
+      maxChunkSendsPerTick
+
+  public void sendChunk(int, int);
+    descriptor: (II)V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=3, locals=3, args_size=3
+         0: aload_0
+         1: getfield      #34                 // Field pendingChunksToSend:Lit/unimi/dsi/fastutil/longs/LongSet;
+         4: iload_1
+         5: iload_2
+         6: invokestatic  #177                // Method net/minecraft/world/level/ChunkCoordIntPair.c:(II)J
+         9: invokeinterface #183,  3          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongSet.add:(J)Z
+        14: pop
+        15: return
+      LineNumberTable:
+        line 64: 0
+        line 65: 15
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      16     0  this   Lcom/moulberry/axiom/WorldExtension;
+            0      16     1    cx   I
+            0      16     2    cz   I
+    MethodParameters:
+      Name                           Flags
+      cx
+      cz
+
+  public void lightChunk(int, int);
+    descriptor: (II)V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=3, locals=3, args_size=3
+         0: aload_0
+         1: getfield      #36                 // Field pendingChunksToLight:Lit/unimi/dsi/fastutil/longs/LongSet;
+         4: iload_1
+         5: iload_2
+         6: invokestatic  #177                // Method net/minecraft/world/level/ChunkCoordIntPair.c:(II)J
+         9: invokeinterface #183,  3          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongSet.add:(J)Z
+        14: pop
+        15: return
+      LineNumberTable:
+        line 68: 0
+        line 69: 15
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      16     0  this   Lcom/moulberry/axiom/WorldExtension;
+            0      16     1    cx   I
+            0      16     2    cz   I
+    MethodParameters:
+      Name                           Flags
+      cx
+      cz
+
+  public void onPlayerJoin(org.bukkit.entity.Player);
+    descriptor: (Lorg/bukkit/entity/Player;)V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=4, locals=5, args_size=2
+         0: aload_0
+         1: getfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+         4: invokeinterface #189,  1          // InterfaceMethod java/util/Map.isEmpty:()Z
+         9: ifne          76
+        12: new           #191                // class java/util/ArrayList
+        15: dup
+        16: aload_0
+        17: getfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+        20: invokeinterface #195,  1          // InterfaceMethod java/util/Map.values:()Ljava/util/Collection;
+        25: invokespecial #198                // Method java/util/ArrayList."<init>":(Ljava/util/Collection;)V
+        28: astore_2
+        29: new           #9                  // class net/minecraft/network/PacketDataSerializer
+        32: dup
+        33: invokestatic  #204                // Method io/netty/buffer/Unpooled.buffer:()Lio/netty/buffer/ByteBuf;
+        36: invokespecial #207                // Method net/minecraft/network/PacketDataSerializer."<init>":(Lio/netty/buffer/ByteBuf;)V
+        39: astore_3
+        40: aload_3
+        41: aload_2
+        42: invokedynamic #221,  0            // InvokeDynamic #1:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+        47: invokevirtual #225                // Method net/minecraft/network/PacketDataSerializer.a:(Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+        50: aload_3
+        51: invokestatic  #228                // InterfaceMethod java/util/Set.of:()Ljava/util/Set;
+        54: invokedynamic #235,  0            // InvokeDynamic #2:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+        59: invokevirtual #225                // Method net/minecraft/network/PacketDataSerializer.a:(Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+        62: aload_3
+        63: invokestatic  #241                // Method io/netty/buffer/ByteBufUtil.getBytes:(Lio/netty/buffer/ByteBuf;)[B
+        66: astore        4
+        68: aload_1
+        69: ldc           #243                // String axiom:marker_data
+        71: aload         4
+        73: invokestatic  #249                // Method com/moulberry/axiom/VersionHelper.sendCustomPayload:(Lorg/bukkit/entity/Player;Ljava/lang/String;[B)V
+        76: aload_1
+        77: checkcast     #109                // class org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer
+        80: invokevirtual #112                // Method org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer.getHandle:()Lnet/minecraft/server/level/EntityPlayer;
+        83: astore_2
+        84: aload_0
+        85: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+        88: getfield      #253                // Field net/minecraft/server/level/WorldServer.chunkPacketBlockController:Lcom/destroystokyo/paper/antixray/ChunkPacketBlockController;
+        91: aload_2
+        92: aload_0
+        93: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+        96: aload_2
+        97: invokevirtual #259                // Method net/minecraft/server/level/EntityPlayer.di:()Lnet/minecraft/core/BlockPosition;
+       100: invokevirtual #263                // Method net/minecraft/server/level/WorldServer.getChunkIfLoaded:(Lnet/minecraft/core/BlockPosition;)Lnet/minecraft/world/level/chunk/Chunk;
+       103: invokevirtual #269                // Method com/destroystokyo/paper/antixray/ChunkPacketBlockController.shouldModify:(Lnet/minecraft/server/level/EntityPlayer;Lnet/minecraft/world/level/chunk/Chunk;)Z
+       106: ifeq          131
+       109: ldc_w         #271                // String Axiom: Warning, anti-xray is enabled. This will cause issues when copying blocks. Please turn anti-xray off
+       112: invokestatic  #277                // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+       115: astore_3
+       116: aload_1
+       117: aload_3
+       118: getstatic     #283                // Field net/kyori/adventure/text/format/NamedTextColor.RED:Lnet/kyori/adventure/text/format/NamedTextColor;
+       121: invokeinterface #287,  2          // InterfaceMethod net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+       126: invokeinterface #293,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+       131: goto          135
+       134: astore_2
+       135: return
+      Exception table:
+         from    to  target type
+            76   131   134   Class java/lang/Throwable
+      StackMapTable: number_of_entries = 4
+        frame_type = 251 /* same_frame_extended */
+          offset_delta = 76
+        frame_type = 54 /* same */
+        frame_type = 66 /* same_locals_1_stack_item */
+          stack = [ class java/lang/Throwable ]
+        frame_type = 0 /* same */
+      LineNumberTable:
+        line 72: 0
+        line 73: 12
+        line 75: 29
+        line 76: 40
+        line 77: 50
+        line 79: 62
+        line 80: 68
+        line 84: 76
+        line 85: 84
+        line 86: 109
+        line 87: 116
+        line 89: 131
+        line 90: 135
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+           29      47     2 markerData   Ljava/util/List;
+           40      36     3   buf   Lnet/minecraft/network/PacketDataSerializer;
+           68       8     4 bytes   [B
+          116      15     3  text   Lnet/kyori/adventure/text/Component;
+           84      47     2 serverPlayer   Lnet/minecraft/server/level/EntityPlayer;
+            0     136     0  this   Lcom/moulberry/axiom/WorldExtension;
+            0     136     1 player   Lorg/bukkit/entity/Player;
+      LocalVariableTypeTable:
+        Start  Length  Slot  Name   Signature
+           29      47     2 markerData   Ljava/util/List<Lcom/moulberry/axiom/marker/MarkerData;>;
+    MethodParameters:
+      Name                           Flags
+      player
+
+  public void tick(boolean, int, int);
+    descriptor: (ZII)V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=3, locals=4, args_size=4
+         0: iload_1
+         1: ifeq          8
+         4: aload_0
+         5: invokevirtual #306                // Method tickMarkers:()V
+         8: aload_0
+         9: iload_2
+        10: iload_3
+        11: invokevirtual #309                // Method tickChunkRelight:(II)V
+        14: return
+      StackMapTable: number_of_entries = 1
+        frame_type = 8 /* same */
+      LineNumberTable:
+        line 93: 0
+        line 94: 4
+        line 96: 8
+        line 97: 14
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      15     0  this   Lcom/moulberry/axiom/WorldExtension;
+            0      15     1 sendMarkers   Z
+            0      15     2 maxChunkRelightsPerTick   I
+            0      15     3 maxChunkSendsPerTick   I
+    MethodParameters:
+      Name                           Flags
+      sendMarkers
+      maxChunkRelightsPerTick
+      maxChunkSendsPerTick
+
+  static {};
+    descriptor: ()V
+    flags: (0x0008) ACC_STATIC
+    Code:
+      stack=2, locals=0, args_size=0
+         0: new           #38                 // class java/util/HashMap
+         3: dup
+         4: invokespecial #39                 // Method java/util/HashMap."<init>":()V
+         7: putstatic     #48                 // Field extensions:Ljava/util/Map;
+        10: return
+      LineNumberTable:
+        line 32: 0
+}
+InnerClasses:
+  public static #10= #7 of #9;            // b=class net/minecraft/network/PacketDataSerializer$b of class net/minecraft/network/PacketDataSerializer
+  public static final #15= #12 of #14;    // Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+SourceFile: "WorldExtension.java"
+BootstrapMethods:
+  0: #69 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #56 (Ljava/lang/Object;)Ljava/lang/Object;
+      #61 REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$get$0:(Lnet/minecraft/resources/ResourceKey;)Lcom/moulberry/axiom/WorldExtension;
+      #62 (Lnet/minecraft/resources/ResourceKey;)Lcom/moulberry/axiom/WorldExtension;
+  1: #69 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #209 (Ljava/lang/Object;Ljava/lang/Object;)V
+      #216 REF_invokeStatic com/moulberry/axiom/marker/MarkerData.write:(Lnet/minecraft/network/PacketDataSerializer;Lcom/moulberry/axiom/marker/MarkerData;)V
+      #217 (Lnet/minecraft/network/PacketDataSerializer;Lcom/moulberry/axiom/marker/MarkerData;)V
+  2: #69 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #209 (Ljava/lang/Object;Ljava/lang/Object;)V
+      #233 REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$onPlayerJoin$1:(Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+      #234 (Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  3: #69 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #209 (Ljava/lang/Object;Ljava/lang/Object;)V
+      #372 REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$tickMarkers$2:(Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+      #234 (Lnet/minecraft/network/PacketDataSerializer;Ljava/util/UUID;)V
+  4: #69 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #467 (Ljava/lang/Object;)V
+      #472 REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$tickChunkRelight$3:(Lnet/minecraft/world/level/ChunkCoordIntPair;)V
+      #473 (Lnet/minecraft/world/level/ChunkCoordIntPair;)V
+  5: #69 REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #478 (I)V
+      #482 REF_invokeStatic com/moulberry/axiom/WorldExtension.lambda$tickChunkRelight$4:(I)V
+      #478 (I)V

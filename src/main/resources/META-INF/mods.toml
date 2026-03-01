@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[24,]"
+issueTrackerURL="https://minecraftforge.net/"
+logoFile="forge_logo.png"
+license="All Rights Reserved - One World Studio 2019-2026"
+
+[[mods]]
+    modId="forge"
+    version="${global.forgeVersion}"
+    updateJSONURL="https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"
+    displayURL="https://minecraftforge.net/"
+    displayName="Forge"
+    credits="Anyone who has contributed on Github and supports our development"
+    authors="LexManos,cpw"
+    description='''
+    Forge, a broad compatibility API.
+    '''
+[[mods]]
+    modId="oneworldstudio"
+    version="1.20.1"
+    displayName="OneWorldCore"
+    authors="One World Studio [Unitei]"
+    description='''
+    OneWorldCore, a hybrid server of Bukkit and Forge.
+    All Rights Reserved - One World Studio 2019-2026
+    '''

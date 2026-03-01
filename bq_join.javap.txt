@@ -1,0 +1,203 @@
+﻿Compiled from "JoinQuitListener.java"
+public class org.betonquest.betonquest.listener.JoinQuitListener implements org.bukkit.event.Listener {
+  private final org.betonquest.betonquest.api.config.ConfigAccessor config;
+
+  private final org.betonquest.betonquest.kernel.processor.quest.ObjectiveProcessor questTypeApi;
+
+  private final org.betonquest.betonquest.data.PlayerDataStorage playerDataStorage;
+
+  private final org.betonquest.betonquest.api.service.conversation.Conversations conversations;
+
+  private final org.betonquest.betonquest.api.profile.ProfileProvider profileProvider;
+
+  private final org.betonquest.betonquest.web.updater.Updater updater;
+
+  public org.betonquest.betonquest.listener.JoinQuitListener(org.betonquest.betonquest.api.config.ConfigAccessor, org.betonquest.betonquest.kernel.processor.quest.ObjectiveProcessor, org.betonquest.betonquest.data.PlayerDataStorage, org.betonquest.betonquest.api.service.conversation.Conversations, org.betonquest.betonquest.api.profile.ProfileProvider, org.betonquest.betonquest.web.updater.Updater);
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: aload_1
+       6: putfield      #7                  // Field config:Lorg/betonquest/betonquest/api/config/ConfigAccessor;
+       9: aload_0
+      10: aload_2
+      11: putfield      #13                 // Field questTypeApi:Lorg/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor;
+      14: aload_0
+      15: aload_3
+      16: putfield      #17                 // Field playerDataStorage:Lorg/betonquest/betonquest/data/PlayerDataStorage;
+      19: aload_0
+      20: aload         4
+      22: putfield      #21                 // Field conversations:Lorg/betonquest/betonquest/api/service/conversation/Conversations;
+      25: aload_0
+      26: aload         5
+      28: putfield      #25                 // Field profileProvider:Lorg/betonquest/betonquest/api/profile/ProfileProvider;
+      31: aload_0
+      32: aload         6
+      34: putfield      #29                 // Field updater:Lorg/betonquest/betonquest/web/updater/Updater;
+      37: return
+
+  public void playerPreLogin(org.bukkit.event.player.AsyncPlayerPreLoginEvent);
+    Code:
+       0: aload_1
+       1: invokevirtual #33                 // Method org/bukkit/event/player/AsyncPlayerPreLoginEvent.getLoginResult:()Lorg/bukkit/event/player/AsyncPlayerPreLoginEvent$Result;
+       4: getstatic     #39                 // Field org/bukkit/event/player/AsyncPlayerPreLoginEvent$Result.ALLOWED:Lorg/bukkit/event/player/AsyncPlayerPreLoginEvent$Result;
+       7: if_acmpeq     11
+      10: return
+      11: aload_0
+      12: getfield      #25                 // Field profileProvider:Lorg/betonquest/betonquest/api/profile/ProfileProvider;
+      15: aload_1
+      16: invokevirtual #45                 // Method org/bukkit/event/player/AsyncPlayerPreLoginEvent.getUniqueId:()Ljava/util/UUID;
+      19: invokestatic  #49                 // Method org/bukkit/Bukkit.getOfflinePlayer:(Ljava/util/UUID;)Lorg/bukkit/OfflinePlayer;
+      22: invokeinterface #55,  2           // InterfaceMethod org/betonquest/betonquest/api/profile/ProfileProvider.getProfile:(Lorg/bukkit/OfflinePlayer;)Lorg/betonquest/betonquest/api/profile/Profile;
+      27: astore_2
+      28: aload_0
+      29: getfield      #17                 // Field playerDataStorage:Lorg/betonquest/betonquest/data/PlayerDataStorage;
+      32: aload_2
+      33: invokevirtual #61                 // Method org/betonquest/betonquest/data/PlayerDataStorage.init:(Lorg/betonquest/betonquest/api/profile/Profile;)Lorg/betonquest/betonquest/database/PlayerData;
+      36: pop
+      37: return
+
+  public void onPlayerJoin(org.bukkit.event.player.PlayerJoinEvent);
+    Code:
+       0: aload_1
+       1: invokevirtual #67                 // Method org/bukkit/event/player/PlayerJoinEvent.getPlayer:()Lorg/bukkit/entity/Player;
+       4: astore_2
+       5: aload_0
+       6: getfield      #25                 // Field profileProvider:Lorg/betonquest/betonquest/api/profile/ProfileProvider;
+       9: aload_2
+      10: invokeinterface #73,  2           // InterfaceMethod org/betonquest/betonquest/api/profile/ProfileProvider.getProfile:(Lorg/bukkit/entity/Player;)Lorg/betonquest/betonquest/api/profile/OnlineProfile;
+      15: astore_3
+      16: aload_0
+      17: getfield      #17                 // Field playerDataStorage:Lorg/betonquest/betonquest/data/PlayerDataStorage;
+      20: aload_3
+      21: invokevirtual #76                 // Method org/betonquest/betonquest/data/PlayerDataStorage.get:(Lorg/betonquest/betonquest/api/profile/OnlineProfile;)Lorg/betonquest/betonquest/database/PlayerData;
+      24: astore        4
+      26: aload         4
+      28: invokevirtual #80                 // Method org/betonquest/betonquest/database/PlayerData.startObjectives:()V
+      31: aload_0
+      32: getfield      #13                 // Field questTypeApi:Lorg/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor;
+      35: aload_3
+      36: aload_0
+      37: getfield      #17                 // Field playerDataStorage:Lorg/betonquest/betonquest/data/PlayerDataStorage;
+      40: invokevirtual #85                 // Method org/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor.startAll:(Lorg/betonquest/betonquest/api/profile/Profile;Lorg/betonquest/betonquest/data/PlayerDataStorage;)V
+      43: aload_0
+      44: aload_2
+      45: aload_3
+      46: invokevirtual #91                 // Method checkResourcepack:(Lorg/bukkit/entity/Player;Lorg/betonquest/betonquest/api/profile/OnlineProfile;)V
+      49: aload_3
+      50: invokestatic  #95                 // Method org/betonquest/betonquest/feature/journal/Journal.hasJournal:(Lorg/betonquest/betonquest/api/profile/OnlineProfile;)Z
+      53: ifeq          64
+      56: aload         4
+      58: invokevirtual #101                // Method org/betonquest/betonquest/database/PlayerData.getJournal:()Lorg/betonquest/betonquest/feature/journal/Journal;
+      61: invokevirtual #105                // Method org/betonquest/betonquest/feature/journal/Journal.update:()V
+      64: aload_2
+      65: ldc           #108                // String betonquest.admin
+      67: invokeinterface #110,  2          // InterfaceMethod org/bukkit/entity/Player.hasPermission:(Ljava/lang/String;)Z
+      72: ifeq          83
+      75: aload_0
+      76: getfield      #29                 // Field updater:Lorg/betonquest/betonquest/web/updater/Updater;
+      79: aload_2
+      80: invokevirtual #116                // Method org/betonquest/betonquest/web/updater/Updater.sendUpdateNotification:(Lorg/bukkit/entity/Player;)V
+      83: aload         4
+      85: invokevirtual #122                // Method org/betonquest/betonquest/database/PlayerData.getActiveConversation:()Lorg/betonquest/betonquest/conversation/PlayerConversationState;
+      88: ifnull        113
+      91: new           #126                // class org/betonquest/betonquest/conversation/ConversationResumer
+      94: dup
+      95: aload_0
+      96: getfield      #7                  // Field config:Lorg/betonquest/betonquest/api/config/ConfigAccessor;
+      99: aload_0
+     100: getfield      #21                 // Field conversations:Lorg/betonquest/betonquest/api/service/conversation/Conversations;
+     103: aload_3
+     104: aload         4
+     106: invokevirtual #122                // Method org/betonquest/betonquest/database/PlayerData.getActiveConversation:()Lorg/betonquest/betonquest/conversation/PlayerConversationState;
+     109: invokespecial #128                // Method org/betonquest/betonquest/conversation/ConversationResumer."<init>":(Lorg/betonquest/betonquest/api/config/ConfigAccessor;Lorg/betonquest/betonquest/api/service/conversation/Conversations;Lorg/betonquest/betonquest/api/profile/OnlineProfile;Lorg/betonquest/betonquest/conversation/PlayerConversationState;)V
+     112: pop
+     113: return
+
+  private void checkResourcepack(org.bukkit.entity.Player, org.betonquest.betonquest.api.profile.OnlineProfile);
+    Code:
+       0: aload_1
+       1: invokeinterface #131,  1          // InterfaceMethod org/bukkit/entity/Player.getResourcePackStatus:()Lorg/bukkit/event/player/PlayerResourcePackStatusEvent$Status;
+       6: astore_3
+       7: aload_3
+       8: ifnull        56
+      11: aload_0
+      12: getfield      #13                 // Field questTypeApi:Lorg/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor;
+      15: aload_2
+      16: invokevirtual #135                // Method org/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor.getForProfile:(Lorg/betonquest/betonquest/api/profile/Profile;)Ljava/util/List;
+      19: invokeinterface #139,  1          // InterfaceMethod java/util/List.stream:()Ljava/util/stream/Stream;
+      24: invokedynamic #145,  0            // InvokeDynamic #0:test:()Ljava/util/function/Predicate;
+      29: invokeinterface #149,  2          // InterfaceMethod java/util/stream/Stream.filter:(Ljava/util/function/Predicate;)Ljava/util/stream/Stream;
+      34: invokedynamic #155,  0            // InvokeDynamic #1:apply:()Ljava/util/function/Function;
+      39: invokeinterface #159,  2          // InterfaceMethod java/util/stream/Stream.map:(Ljava/util/function/Function;)Ljava/util/stream/Stream;
+      44: aload_2
+      45: aload_3
+      46: invokedynamic #163,  0            // InvokeDynamic #2:accept:(Lorg/betonquest/betonquest/api/profile/OnlineProfile;Lorg/bukkit/event/player/PlayerResourcePackStatusEvent$Status;)Ljava/util/function/Consumer;
+      51: invokeinterface #167,  2          // InterfaceMethod java/util/stream/Stream.forEach:(Ljava/util/function/Consumer;)V
+      56: return
+
+  public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent);
+    Code:
+       0: aload_0
+       1: getfield      #25                 // Field profileProvider:Lorg/betonquest/betonquest/api/profile/ProfileProvider;
+       4: aload_1
+       5: invokevirtual #171                // Method org/bukkit/event/player/PlayerQuitEvent.getPlayer:()Lorg/bukkit/entity/Player;
+       8: invokeinterface #73,  2           // InterfaceMethod org/betonquest/betonquest/api/profile/ProfileProvider.getProfile:(Lorg/bukkit/entity/Player;)Lorg/betonquest/betonquest/api/profile/OnlineProfile;
+      13: astore_2
+      14: aload_0
+      15: getfield      #13                 // Field questTypeApi:Lorg/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor;
+      18: aload_2
+      19: invokevirtual #135                // Method org/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor.getForProfile:(Lorg/betonquest/betonquest/api/profile/Profile;)Ljava/util/List;
+      22: invokeinterface #174,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+      27: astore_3
+      28: aload_3
+      29: invokeinterface #178,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+      34: ifeq          66
+      37: aload_3
+      38: invokeinterface #184,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      43: checkcast     #188                // class org/betonquest/betonquest/api/quest/objective/Objective
+      46: astore        4
+      48: aload_0
+      49: getfield      #13                 // Field questTypeApi:Lorg/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor;
+      52: aload_2
+      53: aload         4
+      55: invokeinterface #190,  1          // InterfaceMethod org/betonquest/betonquest/api/quest/objective/Objective.getObjectiveID:()Lorg/betonquest/betonquest/api/identifier/ObjectiveIdentifier;
+      60: invokevirtual #194                // Method org/betonquest/betonquest/kernel/processor/quest/ObjectiveProcessor.pause:(Lorg/betonquest/betonquest/api/profile/Profile;Lorg/betonquest/betonquest/api/identifier/ObjectiveIdentifier;)V
+      63: goto          28
+      66: aload_0
+      67: getfield      #17                 // Field playerDataStorage:Lorg/betonquest/betonquest/data/PlayerDataStorage;
+      70: aload_2
+      71: invokevirtual #198                // Method org/betonquest/betonquest/data/PlayerDataStorage.remove:(Lorg/betonquest/betonquest/api/profile/Profile;)V
+      74: return
+
+  private static void lambda$checkResourcepack$3(org.betonquest.betonquest.api.profile.OnlineProfile, org.bukkit.event.player.PlayerResourcePackStatusEvent$Status, org.betonquest.betonquest.quest.objective.resourcepack.ResourcepackObjective);
+    Code:
+       0: aload_2
+       1: invokevirtual #202                // Method org/betonquest/betonquest/quest/objective/resourcepack/ResourcepackObjective.getExceptionHandler:()Lorg/betonquest/betonquest/api/logger/QuestExceptionHandler;
+       4: aload_2
+       5: aload_0
+       6: aload_1
+       7: invokedynamic #208,  0            // InvokeDynamic #3:run:(Lorg/betonquest/betonquest/quest/objective/resourcepack/ResourcepackObjective;Lorg/betonquest/betonquest/api/profile/OnlineProfile;Lorg/bukkit/event/player/PlayerResourcePackStatusEvent$Status;)Lorg/betonquest/betonquest/api/common/function/QuestRunnable;
+      12: invokeinterface #212,  2          // InterfaceMethod org/betonquest/betonquest/api/logger/QuestExceptionHandler.handle:(Lorg/betonquest/betonquest/api/common/function/QuestRunnable;)V
+      17: return
+
+  private static void lambda$checkResourcepack$2(org.betonquest.betonquest.quest.objective.resourcepack.ResourcepackObjective, org.betonquest.betonquest.api.profile.OnlineProfile, org.bukkit.event.player.PlayerResourcePackStatusEvent$Status) throws org.betonquest.betonquest.api.QuestException;
+    Code:
+       0: aload_0
+       1: aload_1
+       2: aload_2
+       3: invokevirtual #218                // Method org/betonquest/betonquest/quest/objective/resourcepack/ResourcepackObjective.processObjective:(Lorg/betonquest/betonquest/api/profile/OnlineProfile;Lorg/bukkit/event/player/PlayerResourcePackStatusEvent$Status;)V
+       6: return
+
+  private static org.betonquest.betonquest.quest.objective.resourcepack.ResourcepackObjective lambda$checkResourcepack$1(org.betonquest.betonquest.api.quest.objective.Objective);
+    Code:
+       0: aload_0
+       1: checkcast     #203                // class org/betonquest/betonquest/quest/objective/resourcepack/ResourcepackObjective
+       4: areturn
+
+  private static boolean lambda$checkResourcepack$0(org.betonquest.betonquest.api.quest.objective.Objective);
+    Code:
+       0: aload_0
+       1: instanceof    #203                // class org/betonquest/betonquest/quest/objective/resourcepack/ResourcepackObjective
+       4: ireturn
+}

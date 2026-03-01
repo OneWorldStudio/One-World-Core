@@ -1,0 +1,405 @@
+Compiled from "HelloPacketListener.java"
+public class com.moulberry.axiom.packet.impl.HelloPacketListener implements com.moulberry.axiom.packet.PacketHandler {
+  private final com.moulberry.axiom.AxiomPaper plugin;
+
+  public com.moulberry.axiom.packet.impl.HelloPacketListener(com.moulberry.axiom.AxiomPaper);
+    Code:
+       0: aload_0
+       1: invokespecial #24                 // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: aload_1
+       6: putfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+       9: return
+
+  public void onReceive(org.bukkit.entity.Player, net.minecraft.network.PacketDataSerializer);
+    Code:
+       0: aload_0
+       1: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+       4: aload_1
+       5: getstatic     #40                 // Field com/moulberry/axiom/restrictions/AxiomPermission.USE:Lcom/moulberry/axiom/restrictions/AxiomPermission;
+       8: invokevirtual #46                 // Method com/moulberry/axiom/AxiomPaper.hasPermission:(Lorg/bukkit/entity/Player;Lcom/moulberry/axiom/restrictions/AxiomPermission;)Z
+      11: ifne          34
+      14: aload_0
+      15: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+      18: getfield      #50                 // Field com/moulberry/axiom/AxiomPaper.failedPermissionAxiomPlayers:Ljava/util/Set;
+      21: aload_1
+      22: invokeinterface #56,  1           // InterfaceMethod org/bukkit/entity/Player.getUniqueId:()Ljava/util/UUID;
+      27: invokeinterface #62,  2           // InterfaceMethod java/util/Set.add:(Ljava/lang/Object;)Z
+      32: pop
+      33: return
+      34: aload_2
+      35: invokevirtual #68                 // Method net/minecraft/network/PacketDataSerializer.m:()I
+      38: istore_3
+      39: iload_3
+      40: bipush        9
+      42: if_icmpeq     157
+      45: iload_3
+      46: invokedynamic #80,  0             // InvokeDynamic #0:makeConcatWithConstants:(I)Ljava/lang/String;
+      51: astore        4
+      53: iload_3
+      54: bipush        9
+      56: if_icmpge     74
+      59: aload         4
+      61: invokedynamic #85,  0             // InvokeDynamic #1:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+      66: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+      69: astore        5
+      71: goto          86
+      74: aload         4
+      76: invokedynamic #96,  0             // InvokeDynamic #2:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+      81: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+      84: astore        5
+      86: aload_0
+      87: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+      90: getfield      #100                // Field com/moulberry/axiom/AxiomPaper.configuration:Lorg/bukkit/configuration/Configuration;
+      93: ldc           #102                // String unsupported-axiom-version
+      95: invokeinterface #107,  2          // InterfaceMethod org/bukkit/configuration/Configuration.getString:(Ljava/lang/String;)Ljava/lang/String;
+     100: astore        6
+     102: aload         6
+     104: ifnonnull     111
+     107: ldc           #109                // String kick
+     109: astore        6
+     111: aload         6
+     113: ldc           #111                // String warn
+     115: invokevirtual #114                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+     118: ifeq          138
+     121: aload_1
+     122: aload         5
+     124: getstatic     #120                // Field net/kyori/adventure/text/format/NamedTextColor.RED:Lnet/kyori/adventure/text/format/NamedTextColor;
+     127: invokeinterface #124,  2          // InterfaceMethod net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     132: invokeinterface #128,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+     137: return
+     138: aload         6
+     140: ldc           #130                // String ignore
+     142: invokevirtual #114                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+     145: ifne          157
+     148: aload_1
+     149: aload         5
+     151: invokeinterface #132,  2          // InterfaceMethod org/bukkit/entity/Player.kick:(Lnet/kyori/adventure/text/Component;)V
+     156: return
+     157: aload_2
+     158: invokevirtual #68                 // Method net/minecraft/network/PacketDataSerializer.m:()I
+     161: istore        4
+     163: aload_2
+     164: invokevirtual #68                 // Method net/minecraft/network/PacketDataSerializer.m:()I
+     167: istore        5
+     169: invokestatic  #138                // Method net/minecraft/SharedConstants.b:()Lnet/minecraft/WorldVersion;
+     172: invokeinterface #144,  1          // InterfaceMethod net/minecraft/WorldVersion.d:()Lnet/minecraft/world/level/storage/DataVersion;
+     177: invokevirtual #149                // Method net/minecraft/world/level/storage/DataVersion.c:()I
+     180: istore        6
+     182: iload         5
+     184: invokestatic  #150                // Method net/minecraft/SharedConstants.c:()I
+     187: if_icmpeq     466
+     190: aload_0
+     191: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     194: getfield      #100                // Field com/moulberry/axiom/AxiomPaper.configuration:Lorg/bukkit/configuration/Configuration;
+     197: ldc           #152                // String incompatible-data-version
+     199: invokeinterface #107,  2          // InterfaceMethod org/bukkit/configuration/Configuration.getString:(Ljava/lang/String;)Ljava/lang/String;
+     204: astore        7
+     206: aload         7
+     208: ifnonnull     215
+     211: ldc           #111                // String warn
+     213: astore        7
+     215: iload         4
+     217: iload         6
+     219: invokedynamic #157,  0            // InvokeDynamic #3:makeConcatWithConstants:(II)Ljava/lang/String;
+     224: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     227: astore        8
+     229: invokestatic  #163                // Method org/bukkit/Bukkit.getPluginManager:()Lorg/bukkit/plugin/PluginManager;
+     232: ldc           #165                // String ViaVersion
+     234: invokeinterface #171,  2          // InterfaceMethod org/bukkit/plugin/PluginManager.isPluginEnabled:(Ljava/lang/String;)Z
+     239: ifne          288
+     242: aload         7
+     244: ldc           #111                // String warn
+     246: invokevirtual #114                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+     249: ifeq          269
+     252: aload_1
+     253: aload         8
+     255: getstatic     #120                // Field net/kyori/adventure/text/format/NamedTextColor.RED:Lnet/kyori/adventure/text/format/NamedTextColor;
+     258: invokeinterface #124,  2          // InterfaceMethod net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     263: invokeinterface #128,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+     268: return
+     269: aload         7
+     271: ldc           #130                // String ignore
+     273: invokevirtual #114                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+     276: ifne          466
+     279: aload_1
+     280: aload         8
+     282: invokeinterface #132,  2          // InterfaceMethod org/bukkit/entity/Player.kick:(Lnet/kyori/adventure/text/Component;)V
+     287: return
+     288: aload_0
+     289: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     292: getfield      #175                // Field com/moulberry/axiom/AxiomPaper.allowedBlockRegistry:Lnet/minecraft/core/RegistryBlockID;
+     295: iload         5
+     297: invokestatic  #181                // Method com/moulberry/axiom/viaversion/ViaVersionHelper.getBlockRegistryForVersion:(Lnet/minecraft/core/RegistryBlockID;I)Lnet/minecraft/core/RegistryBlockID;
+     300: astore        9
+     302: goto          398
+     305: astore        10
+     307: iload         5
+     309: invokestatic  #187                // Method com/viaversion/viaversion/api/protocol/version/ProtocolVersion.getProtocol:(I)Lcom/viaversion/viaversion/api/protocol/version/ProtocolVersion;
+     312: invokedynamic #192,  0            // InvokeDynamic #4:makeConcatWithConstants:(Lcom/viaversion/viaversion/api/protocol/version/ProtocolVersion;)Ljava/lang/String;
+     317: astore        11
+     319: invokestatic  #150                // Method net/minecraft/SharedConstants.c:()I
+     322: invokestatic  #187                // Method com/viaversion/viaversion/api/protocol/version/ProtocolVersion.getProtocol:(I)Lcom/viaversion/viaversion/api/protocol/version/ProtocolVersion;
+     325: invokedynamic #195,  0            // InvokeDynamic #5:makeConcatWithConstants:(Lcom/viaversion/viaversion/api/protocol/version/ProtocolVersion;)Ljava/lang/String;
+     330: astore        12
+     332: aload         11
+     334: aload         12
+     336: invokedynamic #200,  0            // InvokeDynamic #6:makeConcatWithConstants:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+     341: astore        13
+     343: aload         10
+     345: invokevirtual #204                // Method java/lang/Exception.getMessage:()Ljava/lang/String;
+     348: aload         13
+     350: invokedynamic #207,  0            // InvokeDynamic #7:makeConcatWithConstants:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+     355: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     358: astore        14
+     360: aload         7
+     362: ldc           #111                // String warn
+     364: invokevirtual #114                // Method java/lang/String.equals:(Ljava/lang/Object;)Z
+     367: ifeq          389
+     370: aload_1
+     371: aload         14
+     373: getstatic     #120                // Field net/kyori/adventure/text/format/NamedTextColor.RED:Lnet/kyori/adventure/text/format/NamedTextColor;
+     376: invokeinterface #124,  2          // InterfaceMethod net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     381: invokeinterface #128,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+     386: goto          397
+     389: aload_1
+     390: aload         14
+     392: invokeinterface #132,  2          // InterfaceMethod org/bukkit/entity/Player.kick:(Lnet/kyori/adventure/text/Component;)V
+     397: return
+     398: aload_0
+     399: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     402: getfield      #213                // Field com/moulberry/axiom/AxiomPaper.playerBlockRegistry:Ljava/util/Map;
+     405: aload_1
+     406: invokeinterface #56,  1           // InterfaceMethod org/bukkit/entity/Player.getUniqueId:()Ljava/util/UUID;
+     411: aload         9
+     413: invokeinterface #219,  3          // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+     418: pop
+     419: aload_0
+     420: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     423: getfield      #222                // Field com/moulberry/axiom/AxiomPaper.playerProtocolVersion:Ljava/util/Map;
+     426: aload_1
+     427: invokeinterface #56,  1           // InterfaceMethod org/bukkit/entity/Player.getUniqueId:()Ljava/util/UUID;
+     432: iload         5
+     434: invokestatic  #228                // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+     437: invokeinterface #219,  3          // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+     442: pop
+     443: ldc           #230                // String Axiom: Warning, client and server versions don\'t match. Axiom will try to use ViaVersion conversions, but this process may cause problems
+     445: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     448: astore        10
+     450: aload_1
+     451: aload         10
+     453: getstatic     #120                // Field net/kyori/adventure/text/format/NamedTextColor.RED:Lnet/kyori/adventure/text/format/NamedTextColor;
+     456: invokeinterface #124,  2          // InterfaceMethod net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     461: invokeinterface #128,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+     466: aload_0
+     467: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     470: getfield      #100                // Field com/moulberry/axiom/AxiomPaper.configuration:Lorg/bukkit/configuration/Configuration;
+     473: ldc           #232                // String max-block-buffer-packet-size
+     475: invokeinterface #236,  2          // InterfaceMethod org/bukkit/configuration/Configuration.getInt:(Ljava/lang/String;)I
+     480: istore        7
+     482: new           #238                // class com/moulberry/axiom/event/AxiomHandshakeEvent
+     485: dup
+     486: aload_1
+     487: iload         7
+     489: invokespecial #241                // Method com/moulberry/axiom/event/AxiomHandshakeEvent."<init>":(Lorg/bukkit/entity/Player;I)V
+     492: astore        8
+     494: invokestatic  #163                // Method org/bukkit/Bukkit.getPluginManager:()Lorg/bukkit/plugin/PluginManager;
+     497: aload         8
+     499: invokeinterface #245,  2          // InterfaceMethod org/bukkit/plugin/PluginManager.callEvent:(Lorg/bukkit/event/Event;)V
+     504: aload         8
+     506: invokevirtual #249                // Method com/moulberry/axiom/event/AxiomHandshakeEvent.isCancelled:()Z
+     509: ifeq          513
+     512: return
+     513: new           #64                 // class net/minecraft/network/PacketDataSerializer
+     516: dup
+     517: invokestatic  #255                // Method io/netty/buffer/Unpooled.buffer:()Lio/netty/buffer/ByteBuf;
+     520: invokespecial #258                // Method net/minecraft/network/PacketDataSerializer."<init>":(Lio/netty/buffer/ByteBuf;)V
+     523: astore        9
+     525: aload         9
+     527: iconst_1
+     528: invokevirtual #262                // Method net/minecraft/network/PacketDataSerializer.writeBoolean:(Z)Lio/netty/buffer/ByteBuf;
+     531: pop
+     532: aload         9
+     534: aload         8
+     536: invokevirtual #265                // Method com/moulberry/axiom/event/AxiomHandshakeEvent.getMaxBufferSize:()I
+     539: invokevirtual #269                // Method net/minecraft/network/PacketDataSerializer.writeInt:(I)Lio/netty/buffer/ByteBuf;
+     542: pop
+     543: aload         9
+     545: iconst_2
+     546: invokevirtual #272                // Method net/minecraft/network/PacketDataSerializer.d:(I)Lnet/minecraft/network/PacketDataSerializer;
+     549: pop
+     550: aload         9
+     552: iconst_0
+     553: invokevirtual #272                // Method net/minecraft/network/PacketDataSerializer.d:(I)Lnet/minecraft/network/PacketDataSerializer;
+     556: pop
+     557: aload         9
+     559: iconst_0
+     560: invokevirtual #272                // Method net/minecraft/network/PacketDataSerializer.d:(I)Lnet/minecraft/network/PacketDataSerializer;
+     563: pop
+     564: aload         9
+     566: invokestatic  #278                // Method io/netty/buffer/ByteBufUtil.getBytes:(Lio/netty/buffer/ByteBuf;)[B
+     569: astore        10
+     571: aload_1
+     572: ldc_w         #280                // String axiom:enable
+     575: aload         10
+     577: invokestatic  #286                // Method com/moulberry/axiom/VersionHelper.sendCustomPayload:(Lorg/bukkit/entity/Player;Ljava/lang/String;[B)V
+     580: aload_0
+     581: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     584: aload_1
+     585: invokevirtual #290                // Method com/moulberry/axiom/AxiomPaper.onAxiomActive:(Lorg/bukkit/entity/Player;)V
+     588: aload_1
+     589: invokeinterface #294,  1          // InterfaceMethod org/bukkit/entity/Player.getWorld:()Lorg/bukkit/World;
+     594: astore        11
+     596: aload_0
+     597: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     600: aload         11
+     602: invokevirtual #298                // Method com/moulberry/axiom/AxiomPaper.getOrCreateWorldProperties:(Lorg/bukkit/World;)Lcom/moulberry/axiom/world_properties/server/ServerWorldPropertiesRegistry;
+     605: astore        12
+     607: aload         12
+     609: ifnonnull     629
+     612: aload_1
+     613: ldc_w         #300                // String axiom:register_world_properties
+     616: iconst_1
+     617: newarray       byte
+     619: dup
+     620: iconst_0
+     621: iconst_0
+     622: bastore
+     623: invokestatic  #286                // Method com/moulberry/axiom/VersionHelper.sendCustomPayload:(Lorg/bukkit/entity/Player;Ljava/lang/String;[B)V
+     626: goto          639
+     629: aload         12
+     631: aload_0
+     632: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     635: aload_1
+     636: invokevirtual #310                // Method com/moulberry/axiom/world_properties/server/ServerWorldPropertiesRegistry.registerFor:(Lorg/bukkit/plugin/Plugin;Lorg/bukkit/entity/Player;)V
+     639: aload         11
+     641: aload_1
+     642: invokestatic  #316                // Method com/moulberry/axiom/WorldExtension.onPlayerJoin:(Lorg/bukkit/World;Lorg/bukkit/entity/Player;)V
+     645: aload_1
+     646: checkcast     #318                // class org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer
+     649: invokevirtual #322                // Method org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer.getHandle:()Lnet/minecraft/server/level/EntityPlayer;
+     652: astore        13
+     654: aload         13
+     656: invokestatic  #328                // InterfaceMethod java/util/List.of:(Ljava/lang/Object;)Ljava/util/List;
+     659: invokestatic  #334                // Method com/moulberry/axiom/blueprint/ServerBlueprintManager.sendManifest:(Ljava/util/List;)V
+     662: aload_1
+     663: invokestatic  #339                // Method com/moulberry/axiom/ServerHeightmaps.sendTo:(Lorg/bukkit/entity/Player;)V
+     666: aload         13
+     668: invokestatic  #345                // Method com/moulberry/axiom/paperapi/block/ImplServerCustomBlocks.sendAll:(Lnet/minecraft/server/level/EntityPlayer;)V
+     671: aload         13
+     673: invokestatic  #348                // Method com/moulberry/axiom/paperapi/display/ImplServerCustomDisplays.sendAll:(Lnet/minecraft/server/level/EntityPlayer;)V
+     676: aload         13
+     678: invokestatic  #328                // InterfaceMethod java/util/List.of:(Ljava/lang/Object;)Ljava/util/List;
+     681: invokestatic  #352                // Method com/moulberry/axiom/paperapi/entity/ImplAxiomHiddenEntities.sendAll:(Ljava/util/List;)V
+     684: aload_1
+     685: invokeinterface #355,  1          // InterfaceMethod org/bukkit/entity/Player.isOp:()Z
+     690: ifne          741
+     693: aload_1
+     694: ldc_w         #357                // String *
+     697: invokeinterface #359,  2          // InterfaceMethod org/bukkit/entity/Player.hasPermission:(Ljava/lang/String;)Z
+     702: ifne          741
+     705: aload_1
+     706: ldc_w         #361                // String axiom.*
+     709: invokeinterface #359,  2          // InterfaceMethod org/bukkit/entity/Player.hasPermission:(Ljava/lang/String;)Z
+     714: ifeq          741
+     717: ldc_w         #363                // String Axiom: Using deprecated axiom.* permission. Please switch to axiom.default for public servers, or axiom.all for private servers
+     720: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     723: astore        14
+     725: aload_1
+     726: aload         14
+     728: getstatic     #366                // Field net/kyori/adventure/text/format/NamedTextColor.YELLOW:Lnet/kyori/adventure/text/format/NamedTextColor;
+     731: invokeinterface #124,  2          // InterfaceMethod net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     736: invokeinterface #128,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+     741: aload_1
+     742: invokeinterface #355,  1          // InterfaceMethod org/bukkit/entity/Player.isOp:()Z
+     747: ifeq          987
+     750: aload_0
+     751: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     754: getfield      #372                // Field com/moulberry/axiom/AxiomPaper.configAddedEntries:I
+     757: ifne          770
+     760: aload_0
+     761: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     764: getfield      #375                // Field com/moulberry/axiom/AxiomPaper.configRemovedEntries:I
+     767: ifeq          987
+     770: new           #377                // class java/lang/StringBuilder
+     773: dup
+     774: ldc_w         #379                // String Axiom: Plugin config is outdated (
+     777: invokespecial #382                // Method java/lang/StringBuilder."<init>":(Ljava/lang/String;)V
+     780: astore        14
+     782: aload_0
+     783: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     786: getfield      #372                // Field com/moulberry/axiom/AxiomPaper.configAddedEntries:I
+     789: ifeq          811
+     792: aload         14
+     794: aload_0
+     795: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     798: getfield      #372                // Field com/moulberry/axiom/AxiomPaper.configAddedEntries:I
+     801: invokevirtual #386                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+     804: ldc_w         #388                // String  new entries
+     807: invokevirtual #391                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     810: pop
+     811: aload_0
+     812: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     815: getfield      #375                // Field com/moulberry/axiom/AxiomPaper.configRemovedEntries:I
+     818: ifeq          859
+     821: aload_0
+     822: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     825: getfield      #372                // Field com/moulberry/axiom/AxiomPaper.configAddedEntries:I
+     828: ifeq          840
+     831: aload         14
+     833: ldc_w         #393                // String ,
+     836: invokevirtual #391                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     839: pop
+     840: aload         14
+     842: aload_0
+     843: getfield      #26                 // Field plugin:Lcom/moulberry/axiom/AxiomPaper;
+     846: getfield      #375                // Field com/moulberry/axiom/AxiomPaper.configRemovedEntries:I
+     849: invokevirtual #386                // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+     852: ldc_w         #395                // String  removed entries
+     855: invokevirtual #391                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     858: pop
+     859: aload         14
+     861: ldc_w         #397                // String )
+     864: invokevirtual #391                // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+     867: pop
+     868: aload         14
+     870: invokevirtual #400                // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+     873: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     876: astore        15
+     878: aload_1
+     879: aload         15
+     881: getstatic     #366                // Field net/kyori/adventure/text/format/NamedTextColor.YELLOW:Lnet/kyori/adventure/text/format/NamedTextColor;
+     884: invokeinterface #124,  2          // InterfaceMethod net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     889: invokeinterface #128,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+     894: ldc_w         #402                // String CLICK HERE
+     897: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     900: getstatic     #405                // Field net/kyori/adventure/text/format/NamedTextColor.GREEN:Lnet/kyori/adventure/text/format/NamedTextColor;
+     903: invokeinterface #406,  2          // InterfaceMethod net/kyori/adventure/text/TextComponent.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     908: checkcast     #11                 // class net/kyori/adventure/text/TextComponent
+     911: getstatic     #412                // Field net/kyori/adventure/text/format/TextDecoration.BOLD:Lnet/kyori/adventure/text/format/TextDecoration;
+     914: invokeinterface #416,  2          // InterfaceMethod net/kyori/adventure/text/TextComponent.decorate:(Lnet/kyori/adventure/text/format/TextDecoration;)Lnet/kyori/adventure/text/Component;
+     919: checkcast     #11                 // class net/kyori/adventure/text/TextComponent
+     922: ldc_w         #418                // String /axiompapermigrateconfig
+     925: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     928: invokeinterface #422,  2          // InterfaceMethod net/kyori/adventure/text/TextComponent.hoverEvent:(Lnet/kyori/adventure/text/event/HoverEventSource;)Lnet/kyori/adventure/text/Component;
+     933: checkcast     #11                 // class net/kyori/adventure/text/TextComponent
+     936: ldc_w         #424                // String axiompapermigrateconfig
+     939: invokestatic  #430                // Method net/kyori/adventure/text/event/ClickEvent.runCommand:(Ljava/lang/String;)Lnet/kyori/adventure/text/event/ClickEvent;
+     942: invokeinterface #434,  2          // InterfaceMethod net/kyori/adventure/text/TextComponent.clickEvent:(Lnet/kyori/adventure/text/event/ClickEvent;)Lnet/kyori/adventure/text/Component;
+     947: astore        16
+     949: aload_1
+     950: invokestatic  #437                // InterfaceMethod net/kyori/adventure/text/Component.text:()Lnet/kyori/adventure/text/TextComponent$Builder;
+     953: aload         16
+     955: invokeinterface #440,  2          // InterfaceMethod net/kyori/adventure/text/TextComponent$Builder.append:(Lnet/kyori/adventure/text/Component;)Lnet/kyori/adventure/text/ComponentBuilder;
+     960: checkcast     #9                  // class net/kyori/adventure/text/TextComponent$Builder
+     963: ldc_w         #442                // String  to migrate the config
+     966: invokestatic  #91                 // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     969: getstatic     #366                // Field net/kyori/adventure/text/format/NamedTextColor.YELLOW:Lnet/kyori/adventure/text/format/NamedTextColor;
+     972: invokeinterface #406,  2          // InterfaceMethod net/kyori/adventure/text/TextComponent.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     977: invokeinterface #440,  2          // InterfaceMethod net/kyori/adventure/text/TextComponent$Builder.append:(Lnet/kyori/adventure/text/Component;)Lnet/kyori/adventure/text/ComponentBuilder;
+     982: invokeinterface #445,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/ComponentLike;)V
+     987: return
+    Exception table:
+       from    to  target type
+         288   302   305   Class java/lang/Exception
+}

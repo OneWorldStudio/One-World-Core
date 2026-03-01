@@ -1,0 +1,167 @@
+package net.minecraft.world.inventory;
+
+import java.util.List;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.StackedContents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Recipe;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_20_R1.entity.CraftHumanEntity;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.event.inventory.InventoryType;
+
+public class TransientCraftingContainer implements CraftingContainer {
+   private final NonNullList<ItemStack> items;
+   private final int width;
+   private final int height;
+   private final AbstractContainerMenu menu;
+
+   // CraftBukkit start - add fields
+   public List<HumanEntity> transaction = new java.util.ArrayList<>();
+   private Recipe currentRecipe;
+   public Container resultInventory;
+   public Player owner;
+   private int maxStack = MAX_STACK;
+
+   public List<ItemStack> getContents() {
+      return this.items;
+   }
+
+   public void onOpen(CraftHumanEntity who) {
+      transaction.add(who);
+   }
+
+   public InventoryType getInvType() {
+      return items.size() == 4 ? InventoryType.CRAFTING : InventoryType.WORKBENCH;
+   }
+
+   public void onClose(CraftHumanEntity who) {
+      transaction.remove(who);
+   }
+
+   public List<HumanEntity> getViewers() {
+      return transaction;
+   }
+
+   public org.bukkit.inventory.InventoryHolder getOwner() {
+      return (owner == null) ? null : owner.getBukkitEntity();
+   }
+
+   // Mohist start
+   public void setOwner(Player owner) {
+      this.owner = owner;
+   }
+   // Mohist end
+
+   @Override
+   public int getMaxStackSize() {
+      return this.maxStack;
+   }
+
+   public void setMaxStackSize(int size) {
+      this.maxStack = size;
+      this.resultInventory.setMaxStackSize(size);
+   }
+
+   @Override
+   public Location getLocation() {
+      return this.menu instanceof CraftingMenu ? ((CraftingMenu) this.menu).access.getLocation() : this.owner.getBukkitEntity().getLocation();
+   }
+
+   @Override
+   public Recipe getCurrentRecipe() {
+      return this.currentRecipe;
+   }
+
+   @Override
+   public void setCurrentRecipe(Recipe currentRecipe) {
+      this.currentRecipe = currentRecipe;
+   }
+
+   public TransientCraftingContainer(AbstractContainerMenu container, int i, int j, Player player) {
+      this(container, i, j);
+      this.owner = player;
+   }
+   // CraftBukkit end
+
+
+   public TransientCraftingContainer(AbstractContainerMenu p_287684_, int p_287629_, int p_287593_) {
+      this(p_287684_, p_287629_, p_287593_, NonNullList.withSize(p_287629_ * p_287593_, ItemStack.EMPTY));
+   }
+
+   public TransientCraftingContainer(AbstractContainerMenu p_287708_, int p_287591_, int p_287609_, NonNullList<ItemStack> p_287695_) {
+      this.items = p_287695_;
+      this.menu = p_287708_;
+      this.width = p_287591_;
+      this.height = p_287609_;
+   }
+
+   public int getContainerSize() {
+      return this.items.size();
+   }
+
+   public boolean isEmpty() {
+      for(ItemStack itemstack : this.items) {
+         if (!itemstack.isEmpty()) {
+            return false;
+         }
+      }
+
+      return true;
+   }
+
+   public ItemStack getItem(int p_287712_) {
+      return p_287712_ >= this.getContainerSize() ? ItemStack.EMPTY : this.items.get(p_287712_);
+   }
+
+   public ItemStack removeItemNoUpdate(int p_287637_) {
+      return ContainerHelper.takeItem(this.items, p_287637_);
+   }
+
+   public ItemStack removeItem(int p_287682_, int p_287576_) {
+      ItemStack itemstack = ContainerHelper.removeItem(this.items, p_287682_, p_287576_);
+      if (!itemstack.isEmpty()) {
+         this.menu.slotsChanged(this);
+      }
+
+      return itemstack;
+   }
+
+   public void setItem(int p_287681_, ItemStack p_287620_) {
+      this.items.set(p_287681_, p_287620_);
+      this.menu.slotsChanged(this);
+   }
+
+   public void setChanged() {
+   }
+
+   public boolean stillValid(Player p_287774_) {
+      return true;
+   }
+
+   public void clearContent() {
+      this.items.clear();
+   }
+
+   public int getHeight() {
+      return this.height;
+   }
+
+   public int getWidth() {
+      return this.width;
+   }
+
+   public List<ItemStack> getItems() {
+      return List.copyOf(this.items);
+   }
+
+   public void fillStackedContents(StackedContents p_287653_) {
+      for(ItemStack itemstack : this.items) {
+         p_287653_.accountSimpleStack(itemstack);
+      }
+
+   }
+}

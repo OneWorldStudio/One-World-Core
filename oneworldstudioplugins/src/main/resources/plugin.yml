@@ -1,0 +1,6 @@
+name: OneWorldCore
+version: 1.20.1
+main: com.oneworldstudiomc.plugins.Main
+api-version: "1.20"
+
+softdepend: [PlaceholderAPI]

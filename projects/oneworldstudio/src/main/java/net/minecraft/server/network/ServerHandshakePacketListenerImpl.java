@@ -1,0 +1,134 @@
+package net.minecraft.server.network;
+
+import java.net.InetAddress;
+import java.util.HashMap;
+import net.minecraft.SharedConstants;
+import net.minecraft.network.Connection;
+import net.minecraft.network.ConnectionProtocol;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
+import net.minecraft.network.protocol.handshake.ServerHandshakePacketListener;
+import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
+import net.minecraft.network.protocol.status.ServerStatus;
+import net.minecraft.server.MinecraftServer;
+
+public class ServerHandshakePacketListenerImpl implements ServerHandshakePacketListener {
+   private static final Component IGNORE_STATUS_REASON = Component.translatable("disconnect.ignoring_status_request");
+   private final MinecraftServer server;
+   private final Connection connection;
+   // CraftBukkit start - add fields
+   private static final HashMap<InetAddress, Long> throttleTracker = new HashMap<InetAddress, Long>();
+   private static int throttleCounter = 0;
+   // CraftBukkit end
+   // Spigot start
+   private static final com.google.gson.Gson gson = new com.google.gson.Gson();
+   static final java.util.regex.Pattern HOST_PATTERN = java.util.regex.Pattern.compile("[0-9a-f\\.:]{0,45}");
+   static final java.util.regex.Pattern PROP_PATTERN = java.util.regex.Pattern.compile("\\w{0,16}");
+   // Spigot end
+
+   public ServerHandshakePacketListenerImpl(MinecraftServer p_9969_, Connection p_9970_) {
+      this.server = p_9969_;
+      this.connection = p_9970_;
+   }
+
+   public void handleIntention(ClientIntentionPacket p_9975_) {
+      if (!net.minecraftforge.server.ServerLifecycleHooks.handleServerLogin(p_9975_, this.connection)) return;
+      this.connection.hostname = p_9975_.hostName + ":" + p_9975_.port; // CraftBukkit  - set hostname
+      switch (p_9975_.getIntention()) {
+         case LOGIN:
+            this.connection.setProtocol(ConnectionProtocol.LOGIN);
+            // CraftBukkit start - Connection throttle
+            try {
+               long currentTime = System.currentTimeMillis();
+               long connectionThrottle = this.server.server.getConnectionThrottle();
+               InetAddress address = ((java.net.InetSocketAddress) this.connection.getRemoteAddress()).getAddress();
+
+               synchronized (throttleTracker) {
+                  if (throttleTracker.containsKey(address) && !"127.0.0.1".equals(address.getHostAddress()) && currentTime - throttleTracker.get(address) < connectionThrottle) {
+                     throttleTracker.put(address, currentTime);
+                     MutableComponent chatmessage = Component.literal("Connection throttled! Please wait before reconnecting.");
+                     this.connection.send(new ClientboundLoginDisconnectPacket(chatmessage));
+                     this.connection.disconnect(chatmessage);
+                     return;
+                  }
+
+                  throttleTracker.put(address, currentTime);
+                  throttleCounter++;
+                  if (throttleCounter > 200) {
+                     throttleCounter = 0;
+
+                     // Cleanup stale entries
+                     java.util.Iterator iter = throttleTracker.entrySet().iterator();
+                     while (iter.hasNext()) {
+                        java.util.Map.Entry<InetAddress, Long> entry = (java.util.Map.Entry) iter.next();
+                        if (entry.getValue() > connectionThrottle) {
+                           iter.remove();
+                        }
+                     }
+                  }
+               }
+            } catch (Throwable t) {
+               org.apache.logging.log4j.LogManager.getLogger().debug("Failed to check connection throttle", t);
+            }
+            // CraftBukkit end
+            if (p_9975_.getProtocolVersion() != SharedConstants.getCurrentVersion().getProtocolVersion()) {
+               Component component;
+               if (p_9975_.getProtocolVersion() < 754) {
+                  component = Component.literal( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedClientMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName())); // Spigot
+               } else {
+                  component = Component.literal( java.text.MessageFormat.format( org.spigotmc.SpigotConfig.outdatedServerMessage.replaceAll("'", "''"), SharedConstants.getCurrentVersion().getName())); // Spigot
+               }
+
+               this.connection.send(new ClientboundLoginDisconnectPacket(component));
+               this.connection.disconnect(component);
+            } else {
+               this.connection.setListener(new ServerLoginPacketListenerImpl(this.server, this.connection));
+               // Spigot Start
+               String[] split = p_9975_.original_ip.split("\00");
+               if (org.spigotmc.SpigotConfig.bungee) {
+                  if ( ( split.length == 3 || split.length == 4 ) && ( HOST_PATTERN.matcher( split[1] ).matches() ) ) {
+                     connection.address = new java.net.InetSocketAddress(split[1], ((java.net.InetSocketAddress) connection.getRemoteAddress()).getPort());
+                     connection.spoofedUUID = com.mojang.util.UUIDTypeAdapter.fromString( split[2] );
+                  } else
+                  {
+                     Component chatmessage = Component.literal("If you wish to use IP forwarding, please enable it in your BungeeCord config as well!");
+                     this.connection.send(new ClientboundLoginDisconnectPacket(chatmessage));
+                     this.connection.disconnect(chatmessage);
+                     return;
+                  }
+                  if ( split.length == 4 )
+                  {
+                     connection.spoofedProfile = gson.fromJson(split[3], com.mojang.authlib.properties.Property[].class);
+                  }
+               } else if ( ( split.length == 3 || split.length == 4 ) && ( HOST_PATTERN.matcher( split[1] ).matches() ) ) {
+                  Component chatmessage = Component.literal("Unknown data in login hostname, did you forget to enable BungeeCord in spigot.yml?");
+                  this.connection.send(new ClientboundLoginDisconnectPacket(chatmessage));
+                  this.connection.disconnect(chatmessage);
+                  return;
+               }
+               // Spigot End
+            }
+            break;
+         case STATUS:
+            ServerStatus serverstatus = this.server.getStatus();
+            if (this.server.repliesToStatus() && serverstatus != null) {
+               this.connection.setProtocol(ConnectionProtocol.STATUS);
+               this.connection.setListener(new ServerStatusPacketListenerImpl(serverstatus, this.connection, this.server.getStatusJson()));
+            } else {
+               this.connection.disconnect(IGNORE_STATUS_REASON);
+            }
+            break;
+         default:
+            throw new UnsupportedOperationException("Invalid intention " + p_9975_.getIntention());
+      }
+
+   }
+
+   public void onDisconnect(Component p_9973_) {
+   }
+
+   public boolean isAcceptingMessages() {
+      return this.connection.isConnected();
+   }
+}

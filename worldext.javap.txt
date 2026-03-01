@@ -1,0 +1,510 @@
+﻿Compiled from "WorldExtension.java"
+public class com.moulberry.axiom.WorldExtension {
+  private static final java.util.Map<net.minecraft.resources.ResourceKey<net.minecraft.world.level.World>, com.moulberry.axiom.WorldExtension> extensions;
+
+  private net.minecraft.server.level.WorldServer level;
+
+  private final it.unimi.dsi.fastutil.longs.LongSet pendingChunksToSend;
+
+  private final it.unimi.dsi.fastutil.longs.LongSet pendingChunksToLight;
+
+  private final java.util.Map<java.util.UUID, com.moulberry.axiom.marker.MarkerData> previousMarkerData;
+
+  public com.moulberry.axiom.WorldExtension();
+    Code:
+       0: aload_0
+       1: invokespecial #29                 // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: new           #31                 // class it/unimi/dsi/fastutil/longs/LongOpenHashSet
+       8: dup
+       9: invokespecial #32                 // Method it/unimi/dsi/fastutil/longs/LongOpenHashSet."<init>":()V
+      12: putfield      #34                 // Field pendingChunksToSend:Lit/unimi/dsi/fastutil/longs/LongSet;
+      15: aload_0
+      16: new           #31                 // class it/unimi/dsi/fastutil/longs/LongOpenHashSet
+      19: dup
+      20: invokespecial #32                 // Method it/unimi/dsi/fastutil/longs/LongOpenHashSet."<init>":()V
+      23: putfield      #36                 // Field pendingChunksToLight:Lit/unimi/dsi/fastutil/longs/LongSet;
+      26: aload_0
+      27: new           #38                 // class java/util/HashMap
+      30: dup
+      31: invokespecial #39                 // Method java/util/HashMap."<init>":()V
+      34: putfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+      37: return
+
+  public static com.moulberry.axiom.WorldExtension get(net.minecraft.server.level.WorldServer);
+    Code:
+       0: getstatic     #48                 // Field extensions:Ljava/util/Map;
+       3: aload_0
+       4: invokevirtual #54                 // Method net/minecraft/server/level/WorldServer.ac:()Lnet/minecraft/resources/ResourceKey;
+       7: invokedynamic #73,  0             // InvokeDynamic #0:apply:()Ljava/util/function/Function;
+      12: invokeinterface #79,  3           // InterfaceMethod java/util/Map.computeIfAbsent:(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object;
+      17: checkcast     #2                  // class com/moulberry/axiom/WorldExtension
+      20: astore_1
+      21: aload_1
+      22: aload_0
+      23: putfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+      26: aload_1
+      27: areturn
+
+  public static void onPlayerJoin(org.bukkit.World, org.bukkit.entity.Player);
+    Code:
+       0: aload_0
+       1: checkcast     #88                 // class org/bukkit/craftbukkit/v1_20_R1/CraftWorld
+       4: invokevirtual #92                 // Method org/bukkit/craftbukkit/v1_20_R1/CraftWorld.getHandle:()Lnet/minecraft/server/level/WorldServer;
+       7: astore_2
+       8: aload_2
+       9: invokestatic  #94                 // Method get:(Lnet/minecraft/server/level/WorldServer;)Lcom/moulberry/axiom/WorldExtension;
+      12: aload_1
+      13: invokevirtual #97                 // Method onPlayerJoin:(Lorg/bukkit/entity/Player;)V
+      16: getstatic     #103                // Field com/moulberry/axiom/AxiomPaper.PLUGIN:Lcom/moulberry/axiom/AxiomPaper;
+      19: aload_1
+      20: invokevirtual #107                // Method com/moulberry/axiom/AxiomPaper.canUseAxiom:(Lorg/bukkit/entity/Player;)Z
+      23: ifeq          37
+      26: aload_0
+      27: aload_1
+      28: checkcast     #109                // class org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer
+      31: invokevirtual #112                // Method org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer.getHandle:()Lnet/minecraft/server/level/EntityPlayer;
+      34: invokestatic  #118                // Method com/moulberry/axiom/annotations/ServerAnnotations.sendAll:(Lorg/bukkit/World;Lnet/minecraft/server/level/EntityPlayer;)V
+      37: return
+
+  public static void tick(net.minecraft.server.MinecraftServer, boolean, int, int);
+    Code:
+       0: getstatic     #48                 // Field extensions:Ljava/util/Map;
+       3: invokeinterface #130,  1          // InterfaceMethod java/util/Map.keySet:()Ljava/util/Set;
+       8: aload_0
+       9: invokevirtual #135                // Method net/minecraft/server/MinecraftServer.E:()Ljava/util/Set;
+      12: invokeinterface #141,  2          // InterfaceMethod java/util/Set.retainAll:(Ljava/util/Collection;)Z
+      17: pop
+      18: aload_0
+      19: invokevirtual #145                // Method net/minecraft/server/MinecraftServer.F:()Ljava/lang/Iterable;
+      22: invokeinterface #151,  1          // InterfaceMethod java/lang/Iterable.iterator:()Ljava/util/Iterator;
+      27: astore        4
+      29: aload         4
+      31: invokeinterface #157,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+      36: ifeq          65
+      39: aload         4
+      41: invokeinterface #161,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      46: checkcast     #50                 // class net/minecraft/server/level/WorldServer
+      49: astore        5
+      51: aload         5
+      53: invokestatic  #94                 // Method get:(Lnet/minecraft/server/level/WorldServer;)Lcom/moulberry/axiom/WorldExtension;
+      56: iload_1
+      57: iload_2
+      58: iload_3
+      59: invokevirtual #164                // Method tick:(ZII)V
+      62: goto          29
+      65: return
+
+  public void sendChunk(int, int);
+    Code:
+       0: aload_0
+       1: getfield      #34                 // Field pendingChunksToSend:Lit/unimi/dsi/fastutil/longs/LongSet;
+       4: iload_1
+       5: iload_2
+       6: invokestatic  #177                // Method net/minecraft/world/level/ChunkCoordIntPair.c:(II)J
+       9: invokeinterface #183,  3          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongSet.add:(J)Z
+      14: pop
+      15: return
+
+  public void lightChunk(int, int);
+    Code:
+       0: aload_0
+       1: getfield      #36                 // Field pendingChunksToLight:Lit/unimi/dsi/fastutil/longs/LongSet;
+       4: iload_1
+       5: iload_2
+       6: invokestatic  #177                // Method net/minecraft/world/level/ChunkCoordIntPair.c:(II)J
+       9: invokeinterface #183,  3          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongSet.add:(J)Z
+      14: pop
+      15: return
+
+  public void onPlayerJoin(org.bukkit.entity.Player);
+    Code:
+       0: aload_0
+       1: getfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+       4: invokeinterface #189,  1          // InterfaceMethod java/util/Map.isEmpty:()Z
+       9: ifne          76
+      12: new           #191                // class java/util/ArrayList
+      15: dup
+      16: aload_0
+      17: getfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+      20: invokeinterface #195,  1          // InterfaceMethod java/util/Map.values:()Ljava/util/Collection;
+      25: invokespecial #198                // Method java/util/ArrayList."<init>":(Ljava/util/Collection;)V
+      28: astore_2
+      29: new           #9                  // class net/minecraft/network/PacketDataSerializer
+      32: dup
+      33: invokestatic  #204                // Method io/netty/buffer/Unpooled.buffer:()Lio/netty/buffer/ByteBuf;
+      36: invokespecial #207                // Method net/minecraft/network/PacketDataSerializer."<init>":(Lio/netty/buffer/ByteBuf;)V
+      39: astore_3
+      40: aload_3
+      41: aload_2
+      42: invokedynamic #221,  0            // InvokeDynamic #1:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+      47: invokevirtual #225                // Method net/minecraft/network/PacketDataSerializer.a:(Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+      50: aload_3
+      51: invokestatic  #228                // InterfaceMethod java/util/Set.of:()Ljava/util/Set;
+      54: invokedynamic #235,  0            // InvokeDynamic #2:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+      59: invokevirtual #225                // Method net/minecraft/network/PacketDataSerializer.a:(Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+      62: aload_3
+      63: invokestatic  #241                // Method io/netty/buffer/ByteBufUtil.getBytes:(Lio/netty/buffer/ByteBuf;)[B
+      66: astore        4
+      68: aload_1
+      69: ldc           #243                // String axiom:marker_data
+      71: aload         4
+      73: invokestatic  #249                // Method com/moulberry/axiom/VersionHelper.sendCustomPayload:(Lorg/bukkit/entity/Player;Ljava/lang/String;[B)V
+      76: aload_1
+      77: checkcast     #109                // class org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer
+      80: invokevirtual #112                // Method org/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer.getHandle:()Lnet/minecraft/server/level/EntityPlayer;
+      83: astore_2
+      84: aload_0
+      85: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+      88: getfield      #253                // Field net/minecraft/server/level/WorldServer.chunkPacketBlockController:Lcom/destroystokyo/paper/antixray/ChunkPacketBlockController;
+      91: aload_2
+      92: aload_0
+      93: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+      96: aload_2
+      97: invokevirtual #259                // Method net/minecraft/server/level/EntityPlayer.di:()Lnet/minecraft/core/BlockPosition;
+     100: invokevirtual #263                // Method net/minecraft/server/level/WorldServer.getChunkIfLoaded:(Lnet/minecraft/core/BlockPosition;)Lnet/minecraft/world/level/chunk/Chunk;
+     103: invokevirtual #269                // Method com/destroystokyo/paper/antixray/ChunkPacketBlockController.shouldModify:(Lnet/minecraft/server/level/EntityPlayer;Lnet/minecraft/world/level/chunk/Chunk;)Z
+     106: ifeq          131
+     109: ldc_w         #271                // String Axiom: Warning, anti-xray is enabled. This will cause issues when copying blocks. Please turn anti-xray off
+     112: invokestatic  #277                // InterfaceMethod net/kyori/adventure/text/Component.text:(Ljava/lang/String;)Lnet/kyori/adventure/text/TextComponent;
+     115: astore_3
+     116: aload_1
+     117: aload_3
+     118: getstatic     #283                // Field net/kyori/adventure/text/format/NamedTextColor.RED:Lnet/kyori/adventure/text/format/NamedTextColor;
+     121: invokeinterface #287,  2          // InterfaceMethod net/kyori/adventure/text/Component.color:(Lnet/kyori/adventure/text/format/TextColor;)Lnet/kyori/adventure/text/Component;
+     126: invokeinterface #293,  2          // InterfaceMethod org/bukkit/entity/Player.sendMessage:(Lnet/kyori/adventure/text/Component;)V
+     131: goto          135
+     134: astore_2
+     135: return
+    Exception table:
+       from    to  target type
+          76   131   134   Class java/lang/Throwable
+
+  public void tick(boolean, int, int);
+    Code:
+       0: iload_1
+       1: ifeq          8
+       4: aload_0
+       5: invokevirtual #306                // Method tickMarkers:()V
+       8: aload_0
+       9: iload_2
+      10: iload_3
+      11: invokevirtual #309                // Method tickChunkRelight:(II)V
+      14: return
+
+  private void tickMarkers();
+    Code:
+       0: new           #191                // class java/util/ArrayList
+       3: dup
+       4: invokespecial #310                // Method java/util/ArrayList."<init>":()V
+       7: astore_1
+       8: new           #312                // class java/util/HashSet
+      11: dup
+      12: invokespecial #313                // Method java/util/HashSet."<init>":()V
+      15: astore_2
+      16: aload_0
+      17: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+      20: invokevirtual #316                // Method net/minecraft/server/level/WorldServer.E:()Lnet/minecraft/world/level/entity/LevelEntityGetter;
+      23: invokeinterface #320,  1          // InterfaceMethod net/minecraft/world/level/entity/LevelEntityGetter.a:()Ljava/lang/Iterable;
+      28: invokeinterface #151,  1          // InterfaceMethod java/lang/Iterable.iterator:()Ljava/util/Iterator;
+      33: astore_3
+      34: aload_3
+      35: invokeinterface #157,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+      40: ifeq          163
+      43: aload_3
+      44: invokeinterface #161,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+      49: checkcast     #324                // class net/minecraft/world/entity/Entity
+      52: astore        4
+      54: aload         4
+      56: instanceof    #326                // class net/minecraft/world/entity/Marker
+      59: ifeq          160
+      62: aload         4
+      64: checkcast     #326                // class net/minecraft/world/entity/Marker
+      67: astore        5
+      69: aload         5
+      71: invokevirtual #330                // Method net/minecraft/world/entity/Marker.getBukkitEntity:()Lorg/bukkit/craftbukkit/v1_20_R1/entity/CraftEntity;
+      74: checkcast     #332                // class org/bukkit/entity/Marker
+      77: invokestatic  #338                // Method com/moulberry/axiom/paperapi/entity/ImplAxiomHiddenEntities.isMarkerHidden:(Lorg/bukkit/entity/Marker;)Z
+      80: ifeq          86
+      83: goto          34
+      86: aload         5
+      88: invokestatic  #342                // Method com/moulberry/axiom/marker/MarkerData.createFrom:(Lnet/minecraft/world/entity/Marker;)Lcom/moulberry/axiom/marker/MarkerData;
+      91: astore        6
+      93: aload_0
+      94: getfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+      97: aload         5
+      99: invokevirtual #346                // Method net/minecraft/world/entity/Marker.ct:()Ljava/util/UUID;
+     102: invokeinterface #348,  2          // InterfaceMethod java/util/Map.get:(Ljava/lang/Object;)Ljava/lang/Object;
+     107: checkcast     #211                // class com/moulberry/axiom/marker/MarkerData
+     110: astore        7
+     112: aload         6
+     114: aload         7
+     116: invokestatic  #354                // Method java/util/Objects.equals:(Ljava/lang/Object;Ljava/lang/Object;)Z
+     119: ifne          148
+     122: aload_0
+     123: getfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+     126: aload         5
+     128: invokevirtual #346                // Method net/minecraft/world/entity/Marker.ct:()Ljava/util/UUID;
+     131: aload         6
+     133: invokeinterface #358,  3          // InterfaceMethod java/util/Map.put:(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+     138: pop
+     139: aload_1
+     140: aload         6
+     142: invokeinterface #361,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     147: pop
+     148: aload_2
+     149: aload         5
+     151: invokevirtual #346                // Method net/minecraft/world/entity/Marker.ct:()Ljava/util/UUID;
+     154: invokeinterface #362,  2          // InterfaceMethod java/util/Set.add:(Ljava/lang/Object;)Z
+     159: pop
+     160: goto          34
+     163: new           #312                // class java/util/HashSet
+     166: dup
+     167: aload_0
+     168: getfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+     171: invokeinterface #130,  1          // InterfaceMethod java/util/Map.keySet:()Ljava/util/Set;
+     176: invokespecial #363                // Method java/util/HashSet."<init>":(Ljava/util/Collection;)V
+     179: astore_3
+     180: aload_3
+     181: aload_2
+     182: invokeinterface #366,  2          // InterfaceMethod java/util/Set.removeAll:(Ljava/util/Collection;)Z
+     187: pop
+     188: aload_0
+     189: getfield      #41                 // Field previousMarkerData:Ljava/util/Map;
+     192: invokeinterface #130,  1          // InterfaceMethod java/util/Map.keySet:()Ljava/util/Set;
+     197: aload_3
+     198: invokeinterface #366,  2          // InterfaceMethod java/util/Set.removeAll:(Ljava/util/Collection;)Z
+     203: pop
+     204: aload_1
+     205: invokeinterface #367,  1          // InterfaceMethod java/util/List.isEmpty:()Z
+     210: ifeq          222
+     213: aload_3
+     214: invokeinterface #368,  1          // InterfaceMethod java/util/Set.isEmpty:()Z
+     219: ifne          344
+     222: new           #9                  // class net/minecraft/network/PacketDataSerializer
+     225: dup
+     226: invokestatic  #204                // Method io/netty/buffer/Unpooled.buffer:()Lio/netty/buffer/ByteBuf;
+     229: invokespecial #207                // Method net/minecraft/network/PacketDataSerializer."<init>":(Lio/netty/buffer/ByteBuf;)V
+     232: astore        4
+     234: aload         4
+     236: aload_1
+     237: invokedynamic #221,  0            // InvokeDynamic #1:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+     242: invokevirtual #225                // Method net/minecraft/network/PacketDataSerializer.a:(Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+     245: aload         4
+     247: aload_3
+     248: invokedynamic #373,  0            // InvokeDynamic #3:accept:()Lnet/minecraft/network/PacketDataSerializer$b;
+     253: invokevirtual #225                // Method net/minecraft/network/PacketDataSerializer.a:(Ljava/util/Collection;Lnet/minecraft/network/PacketDataSerializer$b;)V
+     256: aload         4
+     258: invokestatic  #241                // Method io/netty/buffer/ByteBufUtil.getBytes:(Lio/netty/buffer/ByteBuf;)[B
+     261: astore        5
+     263: new           #191                // class java/util/ArrayList
+     266: dup
+     267: invokespecial #310                // Method java/util/ArrayList."<init>":()V
+     270: astore        6
+     272: aload_0
+     273: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+     276: invokevirtual #377                // Method net/minecraft/server/level/WorldServer.v:()Ljava/util/List;
+     279: invokeinterface #378,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+     284: astore        7
+     286: aload         7
+     288: invokeinterface #157,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+     293: ifeq          335
+     296: aload         7
+     298: invokeinterface #161,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+     303: checkcast     #255                // class net/minecraft/server/level/EntityPlayer
+     306: astore        8
+     308: getstatic     #103                // Field com/moulberry/axiom/AxiomPaper.PLUGIN:Lcom/moulberry/axiom/AxiomPaper;
+     311: aload         8
+     313: invokevirtual #382                // Method net/minecraft/server/level/EntityPlayer.getBukkitEntity:()Lorg/bukkit/craftbukkit/v1_20_R1/entity/CraftPlayer;
+     316: invokevirtual #107                // Method com/moulberry/axiom/AxiomPaper.canUseAxiom:(Lorg/bukkit/entity/Player;)Z
+     319: ifeq          332
+     322: aload         6
+     324: aload         8
+     326: invokeinterface #361,  2          // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     331: pop
+     332: goto          286
+     335: aload         6
+     337: ldc           #243                // String axiom:marker_data
+     339: aload         5
+     341: invokestatic  #386                // Method com/moulberry/axiom/VersionHelper.sendCustomPayloadToAll:(Ljava/util/List;Ljava/lang/String;[B)V
+     344: return
+
+  private void tickChunkRelight(int, int);
+    Code:
+       0: aload_0
+       1: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+       4: invokevirtual #404                // Method net/minecraft/server/level/WorldServer.k:()Lnet/minecraft/server/level/ChunkProviderServer;
+       7: getfield      #409                // Field net/minecraft/server/level/ChunkProviderServer.a:Lnet/minecraft/server/level/PlayerChunkMap;
+      10: astore_3
+      11: iload_2
+      12: ifgt          19
+      15: iconst_1
+      16: goto          20
+      19: iconst_0
+      20: istore        4
+      22: aload_0
+      23: getfield      #34                 // Field pendingChunksToSend:Lit/unimi/dsi/fastutil/longs/LongSet;
+      26: invokeinterface #415,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongSet.longIterator:()Lit/unimi/dsi/fastutil/longs/LongIterator;
+      31: astore        5
+      33: aload         5
+      35: invokeinterface #418,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongIterator.hasNext:()Z
+      40: ifeq          198
+      43: new           #173                // class net/minecraft/world/level/ChunkCoordIntPair
+      46: dup
+      47: aload         5
+      49: invokeinterface #422,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongIterator.nextLong:()J
+      54: invokespecial #425                // Method net/minecraft/world/level/ChunkCoordIntPair."<init>":(J)V
+      57: astore        6
+      59: aload_0
+      60: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+      63: aload         6
+      65: getfield      #428                // Field net/minecraft/world/level/ChunkCoordIntPair.e:I
+      68: aload         6
+      70: getfield      #431                // Field net/minecraft/world/level/ChunkCoordIntPair.f:I
+      73: invokevirtual #434                // Method net/minecraft/server/level/WorldServer.getChunkIfLoaded:(II)Lnet/minecraft/world/level/chunk/Chunk;
+      76: astore        7
+      78: aload         7
+      80: ifnonnull     86
+      83: goto          33
+      86: aload_3
+      87: aload         6
+      89: iconst_0
+      90: invokevirtual #439                // Method net/minecraft/server/level/PlayerChunkMap.a:(Lnet/minecraft/world/level/ChunkCoordIntPair;Z)Ljava/util/List;
+      93: astore        8
+      95: aload         8
+      97: invokeinterface #367,  1          // InterfaceMethod java/util/List.isEmpty:()Z
+     102: ifeq          108
+     105: goto          33
+     108: new           #441                // class net/minecraft/network/protocol/game/ClientboundLevelChunkWithLightPacket
+     111: dup
+     112: aload         7
+     114: aload_0
+     115: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+     118: invokevirtual #445                // Method net/minecraft/server/level/WorldServer.s_:()Lnet/minecraft/world/level/lighting/LevelLightEngine;
+     121: aconst_null
+     122: aconst_null
+     123: iconst_0
+     124: invokespecial #448                // Method net/minecraft/network/protocol/game/ClientboundLevelChunkWithLightPacket."<init>":(Lnet/minecraft/world/level/chunk/Chunk;Lnet/minecraft/world/level/lighting/LevelLightEngine;Ljava/util/BitSet;Ljava/util/BitSet;Z)V
+     127: astore        9
+     129: aload         8
+     131: invokeinterface #378,  1          // InterfaceMethod java/util/List.iterator:()Ljava/util/Iterator;
+     136: astore        10
+     138: aload         10
+     140: invokeinterface #157,  1          // InterfaceMethod java/util/Iterator.hasNext:()Z
+     145: ifeq          173
+     148: aload         10
+     150: invokeinterface #161,  1          // InterfaceMethod java/util/Iterator.next:()Ljava/lang/Object;
+     155: checkcast     #255                // class net/minecraft/server/level/EntityPlayer
+     158: astore        11
+     160: aload         11
+     162: getfield      #451                // Field net/minecraft/server/level/EntityPlayer.c:Lnet/minecraft/server/network/PlayerConnection;
+     165: aload         9
+     167: invokevirtual #456                // Method net/minecraft/server/network/PlayerConnection.a:(Lnet/minecraft/network/protocol/Packet;)V
+     170: goto          138
+     173: iload         4
+     175: ifne          195
+     178: aload         5
+     180: invokeinterface #459,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongIterator.remove:()V
+     185: iinc          2, -1
+     188: iload_2
+     189: ifgt          195
+     192: goto          198
+     195: goto          33
+     198: iload         4
+     200: ifeq          212
+     203: aload_0
+     204: getfield      #34                 // Field pendingChunksToSend:Lit/unimi/dsi/fastutil/longs/LongSet;
+     207: invokeinterface #462,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongSet.clear:()V
+     212: new           #312                // class java/util/HashSet
+     215: dup
+     216: invokespecial #313                // Method java/util/HashSet."<init>":()V
+     219: astore        6
+     221: aload_0
+     222: getfield      #36                 // Field pendingChunksToLight:Lit/unimi/dsi/fastutil/longs/LongSet;
+     225: invokeinterface #415,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongSet.longIterator:()Lit/unimi/dsi/fastutil/longs/LongIterator;
+     230: astore        5
+     232: iload_1
+     233: ifgt          283
+     236: aload         5
+     238: invokeinterface #418,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongIterator.hasNext:()Z
+     243: ifeq          271
+     246: aload         6
+     248: new           #173                // class net/minecraft/world/level/ChunkCoordIntPair
+     251: dup
+     252: aload         5
+     254: invokeinterface #422,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongIterator.nextLong:()J
+     259: invokespecial #425                // Method net/minecraft/world/level/ChunkCoordIntPair."<init>":(J)V
+     262: invokeinterface #362,  2          // InterfaceMethod java/util/Set.add:(Ljava/lang/Object;)Z
+     267: pop
+     268: goto          236
+     271: aload_0
+     272: getfield      #36                 // Field pendingChunksToLight:Lit/unimi/dsi/fastutil/longs/LongSet;
+     275: invokeinterface #462,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongSet.clear:()V
+     280: goto          332
+     283: aload         5
+     285: invokeinterface #418,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongIterator.hasNext:()Z
+     290: ifeq          332
+     293: aload         6
+     295: new           #173                // class net/minecraft/world/level/ChunkCoordIntPair
+     298: dup
+     299: aload         5
+     301: invokeinterface #422,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongIterator.nextLong:()J
+     306: invokespecial #425                // Method net/minecraft/world/level/ChunkCoordIntPair."<init>":(J)V
+     309: invokeinterface #362,  2          // InterfaceMethod java/util/Set.add:(Ljava/lang/Object;)Z
+     314: pop
+     315: aload         5
+     317: invokeinterface #459,  1          // InterfaceMethod it/unimi/dsi/fastutil/longs/LongIterator.remove:()V
+     322: iinc          1, -1
+     325: iload_1
+     326: ifgt          283
+     329: goto          332
+     332: aload_0
+     333: getfield      #81                 // Field level:Lnet/minecraft/server/level/WorldServer;
+     336: invokevirtual #404                // Method net/minecraft/server/level/WorldServer.k:()Lnet/minecraft/server/level/ChunkProviderServer;
+     339: invokevirtual #465                // Method net/minecraft/server/level/ChunkProviderServer.a:()Lnet/minecraft/server/level/LightEngineThreaded;
+     342: aload         6
+     344: invokedynamic #476,  0            // InvokeDynamic #4:accept:()Ljava/util/function/Consumer;
+     349: invokedynamic #485,  0            // InvokeDynamic #5:accept:()Ljava/util/function/IntConsumer;
+     354: invokevirtual #491                // Method net/minecraft/server/level/LightEngineThreaded.relight:(Ljava/util/Set;Ljava/util/function/Consumer;Ljava/util/function/IntConsumer;)I
+     357: pop
+     358: return
+
+  private static void lambda$tickChunkRelight$4(int);
+    Code:
+       0: return
+
+  private static void lambda$tickChunkRelight$3(net.minecraft.world.level.ChunkCoordIntPair);
+    Code:
+       0: return
+
+  private static void lambda$tickMarkers$2(net.minecraft.network.PacketDataSerializer, java.util.UUID);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: invokevirtual #507                // Method net/minecraft/network/PacketDataSerializer.a:(Ljava/util/UUID;)Lnet/minecraft/network/PacketDataSerializer;
+       5: pop
+       6: return
+
+  private static void lambda$onPlayerJoin$1(net.minecraft.network.PacketDataSerializer, java.util.UUID);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: invokevirtual #507                // Method net/minecraft/network/PacketDataSerializer.a:(Ljava/util/UUID;)Lnet/minecraft/network/PacketDataSerializer;
+       5: pop
+       6: return
+
+  private static com.moulberry.axiom.WorldExtension lambda$get$0(net.minecraft.resources.ResourceKey);
+    Code:
+       0: new           #2                  // class com/moulberry/axiom/WorldExtension
+       3: dup
+       4: invokespecial #509                // Method "<init>":()V
+       7: areturn
+
+  static {};
+    Code:
+       0: new           #38                 // class java/util/HashMap
+       3: dup
+       4: invokespecial #39                 // Method java/util/HashMap."<init>":()V
+       7: putstatic     #48                 // Field extensions:Ljava/util/Map;
+      10: return
+}

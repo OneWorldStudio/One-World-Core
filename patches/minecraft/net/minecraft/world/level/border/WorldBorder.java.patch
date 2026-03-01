@@ -1,0 +1,44 @@
+--- a/net/minecraft/world/level/border/WorldBorder.java
++++ b/net/minecraft/world/level/border/WorldBorder.java
+@@ -1,6 +_,7 @@
+ package net.minecraft.world.level.border;
+ 
+ import com.google.common.collect.Lists;
++import com.oneworldstudiomc.plugins.world.utils.ConfigByWorlds;
+ import com.mojang.serialization.DynamicLike;
+ import java.util.List;
+ import net.minecraft.Util;
+@@ -9,6 +_,7 @@
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Entity;
+ import net.minecraft.world.level.ChunkPos;
++import net.minecraft.world.level.Level;
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.shapes.BooleanOp;
+ import net.minecraft.world.phys.shapes.Shapes;
+@@ -27,6 +_,7 @@
+    int f_61913_ = 29999984;
+    private WorldBorder.BorderExtent f_61914_ = new WorldBorder.StaticBorderExtent((double)5.999997E7F);
+    public static final WorldBorder.Settings f_61907_ = new WorldBorder.Settings(0.0D, 0.0D, 0.2D, 5.0D, 5, 15, (double)5.999997E7F, 0L, 0.0D);
++   public Level world = null; // CraftBukkit // Mohist fix create mod
+ 
+    public boolean m_61937_(BlockPos p_61938_) {
+       return (double)(p_61938_.m_123341_() + 1) > this.m_61955_() && (double)p_61938_.m_123341_() < this.m_61957_() && (double)(p_61938_.m_123343_() + 1) > this.m_61956_() && (double)p_61938_.m_123343_() < this.m_61958_();
+@@ -132,7 +_,8 @@
+       for(BorderChangeListener borderchangelistener : this.m_61962_()) {
+          borderchangelistener.m_6312_(this, p_61918_);
+       }
+-
++      // Mohist - Initialize mod world properties to worlds.yml
++      ConfigByWorlds.initMods(world, p_61918_);
+    }
+ 
+    public void m_61919_(double p_61920_, double p_61921_, long p_61922_) {
+@@ -149,6 +_,7 @@
+    }
+ 
+    public void m_61929_(BorderChangeListener p_61930_) {
++      if (f_61905_.contains(p_61930_)) return; // CraftBukkit
+       this.f_61905_.add(p_61930_);
+    }
+ 

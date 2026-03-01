@@ -1,0 +1,81 @@
+package net.minecraft.network.protocol.game;
+
+import java.util.Objects;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.chat.ComponentSerializer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Component.Serializer;
+import net.minecraft.network.protocol.Packet;
+
+public final class ClientboundSystemChatPacket implements Packet<ClientGamePacketListener> {
+   private final Component content;
+   private final boolean overlay;
+   private final String content0;
+
+    public ClientboundSystemChatPacket(Component content, boolean overlay) {
+        this.content = content;
+        this.overlay = overlay;
+        this.content0 = Component.Serializer.toJson(content);
+    }
+
+    public ClientboundSystemChatPacket(String content, boolean overlay) {
+        this(Component.Serializer.fromJson(content), overlay);
+    }
+
+    public ClientboundSystemChatPacket(BaseComponent[] content, boolean overlay) {
+        this(ComponentSerializer.toString(content), overlay);
+    }
+
+    // Spigot end
+    public ClientboundSystemChatPacket(FriendlyByteBuf p_237852_) {
+        this(p_237852_.readComponent(), p_237852_.readBoolean());
+    }
+
+    public void write(FriendlyByteBuf p_237860_) {
+        p_237860_.writeUtf(this.content0, 262144); // Spigot
+        p_237860_.writeBoolean(this.overlay);
+    }
+
+    public void handle(ClientGamePacketListener p_237864_) {
+        p_237864_.handleSystemChat(this);
+    }
+
+    public Component content() {
+        return content;
+    }
+
+    public String content0() {
+      return content0;
+   }
+
+    public boolean isSkippable() {
+        return true;
+    }
+
+    public boolean overlay() {
+        return overlay;
+    }
+
+    @Override
+    public boolean equals(Object p_237868_) {
+        if (p_237868_ == this) return true;
+        if (p_237868_ == null || p_237868_.getClass() != this.getClass()) return false;
+        var that = (ClientboundSystemChatPacket) p_237868_;
+        return Objects.equals(this.content, that.content) &&
+                this.overlay == that.overlay;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(content, overlay);
+    }
+
+    @Override
+    public String toString() {
+        return "ClientboundSystemChatPacket[" +
+                "content=" + content + ", " +
+                "overlay=" + overlay + ']';
+    }
+
+}

@@ -1,0 +1,211 @@
+Compiled from "PaperTeleportData.java"
+public class io.lumine.mythic.paper.PaperTeleportData extends io.lumine.mythic.bukkit.adapters.BukkitTeleportData {
+  private org.bukkit.event.player.PlayerTeleportEvent$TeleportCause cause;
+
+  private io.papermc.paper.entity.TeleportFlag[] flags;
+
+  public io.lumine.mythic.paper.PaperTeleportData(io.lumine.mythic.api.config.MythicLineConfig);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: invokespecial #1                  // Method io/lumine/mythic/bukkit/adapters/BukkitTeleportData."<init>":(Lio/lumine/mythic/api/config/MythicLineConfig;)V
+       5: aload_1
+       6: iconst_2
+       7: anewarray     #7                  // class java/lang/String
+      10: dup
+      11: iconst_0
+      12: ldc           #9                  // String teleportcause
+      14: aastore
+      15: dup
+      16: iconst_1
+      17: ldc           #11                 // String cause
+      19: aastore
+      20: ldc           #13                 // String PLUGIN
+      22: iconst_0
+      23: anewarray     #7                  // class java/lang/String
+      26: invokeinterface #15,  4           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getString:([Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)Ljava/lang/String;
+      31: astore_2
+      32: aload_0
+      33: aload_2
+      34: invokevirtual #21                 // Method java/lang/String.toUpperCase:()Ljava/lang/String;
+      37: invokestatic  #25                 // Method org/bukkit/event/player/PlayerTeleportEvent$TeleportCause.valueOf:(Ljava/lang/String;)Lorg/bukkit/event/player/PlayerTeleportEvent$TeleportCause;
+      40: putfield      #31                 // Field cause:Lorg/bukkit/event/player/PlayerTeleportEvent$TeleportCause;
+      43: goto          67
+      46: astore_3
+      47: ldc           #38                 // String Invalid TeleportCause \"{0}\". Falling back to PLUGIN.
+      49: iconst_1
+      50: anewarray     #40                 // class java/lang/Object
+      53: dup
+      54: iconst_0
+      55: aload_2
+      56: aastore
+      57: invokestatic  #42                 // Method io/lumine/mythic/core/logging/MythicLogger.error:(Ljava/lang/String;[Ljava/lang/Object;)V
+      60: aload_0
+      61: getstatic     #48                 // Field org/bukkit/event/player/PlayerTeleportEvent$TeleportCause.PLUGIN:Lorg/bukkit/event/player/PlayerTeleportEvent$TeleportCause;
+      64: putfield      #31                 // Field cause:Lorg/bukkit/event/player/PlayerTeleportEvent$TeleportCause;
+      67: new           #50                 // class java/util/ArrayList
+      70: dup
+      71: invokespecial #52                 // Method java/util/ArrayList."<init>":()V
+      74: astore_3
+      75: aload_1
+      76: iconst_1
+      77: anewarray     #7                  // class java/lang/String
+      80: dup
+      81: iconst_0
+      82: ldc           #55                 // String retainVehicle
+      84: aastore
+      85: iconst_1
+      86: invokeinterface #57,  3           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getBoolean:([Ljava/lang/String;Z)Z
+      91: istore        4
+      93: iload         4
+      95: ifeq          108
+      98: aload_3
+      99: getstatic     #61                 // Field io/papermc/paper/entity/TeleportFlag$EntityState.RETAIN_VEHICLE:Lio/papermc/paper/entity/TeleportFlag$EntityState;
+     102: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     107: pop
+     108: aload_1
+     109: iconst_1
+     110: anewarray     #7                  // class java/lang/String
+     113: dup
+     114: iconst_0
+     115: ldc           #73                 // String retainPassengers
+     117: aastore
+     118: iconst_1
+     119: invokeinterface #57,  3           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getBoolean:([Ljava/lang/String;Z)Z
+     124: istore        5
+     126: iload         5
+     128: ifeq          141
+     131: aload_3
+     132: getstatic     #75                 // Field io/papermc/paper/entity/TeleportFlag$EntityState.RETAIN_PASSENGERS:Lio/papermc/paper/entity/TeleportFlag$EntityState;
+     135: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     140: pop
+     141: aload_1
+     142: iconst_1
+     143: anewarray     #7                  // class java/lang/String
+     146: dup
+     147: iconst_0
+     148: ldc           #78                 // String retainOpenInventory
+     150: aastore
+     151: iconst_1
+     152: invokeinterface #57,  3           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getBoolean:([Ljava/lang/String;Z)Z
+     157: istore        6
+     159: iload         6
+     161: ifeq          174
+     164: aload_3
+     165: getstatic     #80                 // Field io/papermc/paper/entity/TeleportFlag$EntityState.RETAIN_OPEN_INVENTORY:Lio/papermc/paper/entity/TeleportFlag$EntityState;
+     168: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     173: pop
+     174: aload_1
+     175: iconst_1
+     176: anewarray     #7                  // class java/lang/String
+     179: dup
+     180: iconst_0
+     181: ldc           #83                 // String retainVelocity
+     183: aastore
+     184: iconst_0
+     185: invokeinterface #57,  3           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getBoolean:([Ljava/lang/String;Z)Z
+     190: istore        7
+     192: iload         7
+     194: ifeq          240
+     197: aload_3
+     198: getstatic     #85                 // Field io/papermc/paper/entity/TeleportFlag$Relative.VELOCITY_X:Lio/papermc/paper/entity/TeleportFlag$Relative;
+     201: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     206: pop
+     207: aload_3
+     208: getstatic     #91                 // Field io/papermc/paper/entity/TeleportFlag$Relative.VELOCITY_Y:Lio/papermc/paper/entity/TeleportFlag$Relative;
+     211: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     216: pop
+     217: aload_3
+     218: getstatic     #94                 // Field io/papermc/paper/entity/TeleportFlag$Relative.VELOCITY_Z:Lio/papermc/paper/entity/TeleportFlag$Relative;
+     221: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     226: pop
+     227: aload_3
+     228: getstatic     #97                 // Field io/papermc/paper/entity/TeleportFlag$Relative.VELOCITY_ROTATION:Lio/papermc/paper/entity/TeleportFlag$Relative;
+     231: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     236: pop
+     237: goto          356
+     240: aload_1
+     241: iconst_1
+     242: anewarray     #7                  // class java/lang/String
+     245: dup
+     246: iconst_0
+     247: ldc           #100                // String relativeX
+     249: aastore
+     250: iconst_0
+     251: invokeinterface #57,  3           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getBoolean:([Ljava/lang/String;Z)Z
+     256: ifeq          269
+     259: aload_3
+     260: getstatic     #85                 // Field io/papermc/paper/entity/TeleportFlag$Relative.VELOCITY_X:Lio/papermc/paper/entity/TeleportFlag$Relative;
+     263: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     268: pop
+     269: aload_1
+     270: iconst_1
+     271: anewarray     #7                  // class java/lang/String
+     274: dup
+     275: iconst_0
+     276: ldc           #102                // String relativeY
+     278: aastore
+     279: iconst_0
+     280: invokeinterface #57,  3           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getBoolean:([Ljava/lang/String;Z)Z
+     285: ifeq          298
+     288: aload_3
+     289: getstatic     #91                 // Field io/papermc/paper/entity/TeleportFlag$Relative.VELOCITY_Y:Lio/papermc/paper/entity/TeleportFlag$Relative;
+     292: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     297: pop
+     298: aload_1
+     299: iconst_1
+     300: anewarray     #7                  // class java/lang/String
+     303: dup
+     304: iconst_0
+     305: ldc           #104                // String relativeZ
+     307: aastore
+     308: iconst_0
+     309: invokeinterface #57,  3           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getBoolean:([Ljava/lang/String;Z)Z
+     314: ifeq          327
+     317: aload_3
+     318: getstatic     #94                 // Field io/papermc/paper/entity/TeleportFlag$Relative.VELOCITY_Z:Lio/papermc/paper/entity/TeleportFlag$Relative;
+     321: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     326: pop
+     327: aload_1
+     328: iconst_1
+     329: anewarray     #7                  // class java/lang/String
+     332: dup
+     333: iconst_0
+     334: ldc           #106                // String relativeRotation
+     336: aastore
+     337: iconst_0
+     338: invokeinterface #57,  3           // InterfaceMethod io/lumine/mythic/api/config/MythicLineConfig.getBoolean:([Ljava/lang/String;Z)Z
+     343: ifeq          356
+     346: aload_3
+     347: getstatic     #97                 // Field io/papermc/paper/entity/TeleportFlag$Relative.VELOCITY_ROTATION:Lio/papermc/paper/entity/TeleportFlag$Relative;
+     350: invokeinterface #67,  2           // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
+     355: pop
+     356: aload_0
+     357: aload_3
+     358: invokedynamic #108,  0            // InvokeDynamic #0:apply:()Ljava/util/function/IntFunction;
+     363: invokeinterface #112,  2          // InterfaceMethod java/util/List.toArray:(Ljava/util/function/IntFunction;)[Ljava/lang/Object;
+     368: checkcast     #116                // class "[Lio/papermc/paper/entity/TeleportFlag;"
+     371: putfield      #118                // Field flags:[Lio/papermc/paper/entity/TeleportFlag;
+     374: return
+    Exception table:
+       from    to  target type
+          32    43    46   Class java/lang/IllegalArgumentException
+
+  public void teleport(org.bukkit.entity.Entity, org.bukkit.Location);
+    Code:
+       0: aload_1
+       1: aload_2
+       2: aload_0
+       3: getfield      #31                 // Field cause:Lorg/bukkit/event/player/PlayerTeleportEvent$TeleportCause;
+       6: aload_0
+       7: getfield      #118                // Field flags:[Lio/papermc/paper/entity/TeleportFlag;
+      10: invokeinterface #121,  4          // InterfaceMethod org/bukkit/entity/Entity.teleport:(Lorg/bukkit/Location;Lorg/bukkit/event/player/PlayerTeleportEvent$TeleportCause;[Lio/papermc/paper/entity/TeleportFlag;)Z
+      15: pop
+      16: return
+
+  private static io.papermc.paper.entity.TeleportFlag[] lambda$new$0(int);
+    Code:
+       0: iload_0
+       1: anewarray     #127                // class io/papermc/paper/entity/TeleportFlag
+       4: areturn
+}

@@ -1,0 +1,16 @@
+Menu:
+  Display: "&lItem Component"
+  Size: 27
+  Schema:
+   - 0 0 0 0 0 0 0 D B
+   - 0 $ $ $ $ $ $ $ 0
+   - 0 0 0 0 0 0 0 0 0
+  Icons:
+    BACK_BUTTON:
+      Mapping: B
+      Material: STRUCTURE_VOID
+      Display: '&fBack'
+    DELETE_BUTTON:
+      Mapping: D
+      Material: BARRIER
+      Display: '&cRemove Component'

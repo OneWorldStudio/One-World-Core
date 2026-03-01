@@ -1,0 +1,29 @@
+Compiled from "GoalSelector.java"
+public class net.minecraft.world.entity.ai.goal.GoalSelector {
+  private static final org.slf4j.Logger f_25342_;
+  private static final net.minecraft.world.entity.ai.goal.WrappedGoal f_25343_;
+  private final java.util.Map<net.minecraft.world.entity.ai.goal.Goal$Flag, net.minecraft.world.entity.ai.goal.WrappedGoal> f_25344_;
+  private final java.util.Set<net.minecraft.world.entity.ai.goal.WrappedGoal> f_25345_;
+  private final java.util.function.Supplier<net.minecraft.util.profiling.ProfilerFiller> f_25346_;
+  private final java.util.EnumSet<net.minecraft.world.entity.ai.goal.Goal$Flag> f_25347_;
+  private int f_148095_;
+  private int f_25348_;
+  public net.minecraft.world.entity.ai.goal.GoalSelector(java.util.function.Supplier<net.minecraft.util.profiling.ProfilerFiller>);
+  public void m_25352_(int, net.minecraft.world.entity.ai.goal.Goal);
+  public void m_262460_(java.util.function.Predicate<net.minecraft.world.entity.ai.goal.Goal>);
+  public void m_25363_(net.minecraft.world.entity.ai.goal.Goal);
+  private static boolean m_186075_(net.minecraft.world.entity.ai.goal.WrappedGoal, java.util.EnumSet<net.minecraft.world.entity.ai.goal.Goal$Flag>);
+  private static boolean m_186078_(net.minecraft.world.entity.ai.goal.WrappedGoal, java.util.Map<net.minecraft.world.entity.ai.goal.Goal$Flag, net.minecraft.world.entity.ai.goal.WrappedGoal>);
+  public void m_25373_();
+  public void m_186081_(boolean);
+  public java.util.Set<net.minecraft.world.entity.ai.goal.WrappedGoal> m_148105_();
+  public java.util.stream.Stream<net.minecraft.world.entity.ai.goal.WrappedGoal> m_25386_();
+  public void m_148097_(int);
+  public void m_25355_(net.minecraft.world.entity.ai.goal.Goal$Flag);
+  public void m_25374_(net.minecraft.world.entity.ai.goal.Goal$Flag);
+  public void m_25360_(net.minecraft.world.entity.ai.goal.Goal$Flag, boolean);
+  private static boolean m_25365_(net.minecraft.world.entity.ai.goal.Goal, net.minecraft.world.entity.ai.goal.WrappedGoal);
+  private static boolean m_25376_(net.minecraft.world.entity.ai.goal.Goal, net.minecraft.world.entity.ai.goal.WrappedGoal);
+  private static boolean m_262357_(java.util.function.Predicate, net.minecraft.world.entity.ai.goal.WrappedGoal);
+  static {};
+}

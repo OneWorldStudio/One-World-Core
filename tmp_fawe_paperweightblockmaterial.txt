@@ -1,0 +1,288 @@
+Compiled from "PaperweightBlockMaterial.java"
+public class com.sk89q.worldedit.bukkit.adapter.impl.fawe.v1_20_R1.PaperweightBlockMaterial implements com.sk89q.worldedit.world.registry.BlockMaterial {
+  private final net.minecraft.world.level.block.Block block;
+
+  private final net.minecraft.world.level.block.state.IBlockData blockState;
+
+  private final boolean isTranslucent;
+
+  private final org.bukkit.craftbukkit.v1_20_R1.block.data.CraftBlockData craftBlockData;
+
+  private final org.bukkit.Material craftMaterial;
+
+  private final int opacity;
+
+  private final com.sk89q.jnbt.CompoundTag tile;
+
+  public com.sk89q.worldedit.bukkit.adapter.impl.fawe.v1_20_R1.PaperweightBlockMaterial(net.minecraft.world.level.block.Block);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: aload_1
+       3: invokevirtual #39                 // Method net/minecraft/world/level/block/Block.n:()Lnet/minecraft/world/level/block/state/IBlockData;
+       6: invokespecial #42                 // Method "<init>":(Lnet/minecraft/world/level/block/Block;Lnet/minecraft/world/level/block/state/IBlockData;)V
+       9: return
+
+  public com.sk89q.worldedit.bukkit.adapter.impl.fawe.v1_20_R1.PaperweightBlockMaterial(net.minecraft.world.level.block.Block, net.minecraft.world.level.block.state.IBlockData);
+    Code:
+       0: aload_0
+       1: invokespecial #47                 // Method java/lang/Object."<init>":()V
+       4: aload_0
+       5: aload_1
+       6: putfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       9: aload_0
+      10: aload_2
+      11: putfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+      14: aload_0
+      15: aload_2
+      16: invokestatic  #57                 // Method org/bukkit/craftbukkit/v1_20_R1/block/data/CraftBlockData.fromData:(Lnet/minecraft/world/level/block/state/IBlockData;)Lorg/bukkit/craftbukkit/v1_20_R1/block/data/CraftBlockData;
+      19: putfield      #59                 // Field craftBlockData:Lorg/bukkit/craftbukkit/v1_20_R1/block/data/CraftBlockData;
+      22: aload_0
+      23: aload_0
+      24: getfield      #59                 // Field craftBlockData:Lorg/bukkit/craftbukkit/v1_20_R1/block/data/CraftBlockData;
+      27: invokevirtual #63                 // Method org/bukkit/craftbukkit/v1_20_R1/block/data/CraftBlockData.getMaterial:()Lorg/bukkit/Material;
+      30: putfield      #65                 // Field craftMaterial:Lorg/bukkit/Material;
+      33: ldc           #11                 // class net/minecraft/world/level/block/state/BlockBase
+      35: aload_1
+      36: ldc           #67                 // String properties
+      38: ldc           #69                 // String aN
+      40: invokestatic  #75                 // Method com/sk89q/worldedit/bukkit/adapter/Refraction.pickName:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+      43: invokestatic  #81                 // Method com/sk89q/util/ReflectionUtil.getField:(Ljava/lang/Class;Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;
+      46: checkcast     #9                  // class net/minecraft/world/level/block/state/BlockBase$Info
+      49: astore_3
+      50: aload_0
+      51: ldc           #9                  // class net/minecraft/world/level/block/state/BlockBase$Info
+      53: aload_3
+      54: ldc           #83                 // String canOcclude
+      56: ldc           #85                 // String m
+      58: invokestatic  #75                 // Method com/sk89q/worldedit/bukkit/adapter/Refraction.pickName:(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+      61: invokestatic  #81                 // Method com/sk89q/util/ReflectionUtil.getField:(Ljava/lang/Class;Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;
+      64: checkcast     #87                 // class java/lang/Boolean
+      67: invokevirtual #91                 // Method java/lang/Boolean.booleanValue:()Z
+      70: ifne          77
+      73: iconst_1
+      74: goto          78
+      77: iconst_0
+      78: putfield      #95                 // Field isTranslucent:Z
+      81: aload_0
+      82: aload_2
+      83: getstatic     #101                // Field net/minecraft/world/level/BlockAccessAir.a:Lnet/minecraft/world/level/BlockAccessAir;
+      86: getstatic     #107                // Field net/minecraft/core/BlockPosition.b:Lnet/minecraft/core/BlockPosition;
+      89: invokevirtual #110                // Method net/minecraft/world/level/block/state/IBlockData.b:(Lnet/minecraft/world/level/IBlockAccess;Lnet/minecraft/core/BlockPosition;)I
+      92: putfield      #112                // Field opacity:I
+      95: aload_1
+      96: instanceof    #114                // class net/minecraft/world/level/block/ITileEntity
+      99: ifne          106
+     102: aconst_null
+     103: goto          119
+     106: aload_1
+     107: checkcast     #114                // class net/minecraft/world/level/block/ITileEntity
+     110: getstatic     #107                // Field net/minecraft/core/BlockPosition.b:Lnet/minecraft/core/BlockPosition;
+     113: aload_2
+     114: invokeinterface #117,  3          // InterfaceMethod net/minecraft/world/level/block/ITileEntity.a:(Lnet/minecraft/core/BlockPosition;Lnet/minecraft/world/level/block/state/IBlockData;)Lnet/minecraft/world/level/block/entity/TileEntity;
+     119: astore        4
+     121: aload_0
+     122: aload         4
+     124: ifnonnull     131
+     127: aconst_null
+     128: goto          153
+     131: new           #121                // class com/sk89q/worldedit/bukkit/adapter/impl/fawe/v1_20_R1/nbt/PaperweightLazyCompoundTag
+     134: dup
+     135: aload         4
+     137: dup
+     138: invokestatic  #127                // Method java/util/Objects.requireNonNull:(Ljava/lang/Object;)Ljava/lang/Object;
+     141: pop
+     142: invokedynamic #145,  0            // InvokeDynamic #0:get:(Lnet/minecraft/world/level/block/entity/TileEntity;)Lcom/google/common/base/Supplier;
+     147: invokestatic  #151                // Method com/google/common/base/Suppliers.memoize:(Lcom/google/common/base/Supplier;)Lcom/google/common/base/Supplier;
+     150: invokespecial #154                // Method com/sk89q/worldedit/bukkit/adapter/impl/fawe/v1_20_R1/nbt/PaperweightLazyCompoundTag."<init>":(Ljava/util/function/Supplier;)V
+     153: putfield      #158                // Field tile:Lcom/sk89q/jnbt/CompoundTag;
+     156: return
+
+  public net.minecraft.world.level.block.Block getBlock();
+    Code:
+       0: aload_0
+       1: getfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       4: areturn
+
+  public net.minecraft.world.level.block.state.IBlockData getState();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: areturn
+
+  public org.bukkit.craftbukkit.v1_20_R1.block.data.CraftBlockData getCraftBlockData();
+    Code:
+       0: aload_0
+       1: getfield      #59                 // Field craftBlockData:Lorg/bukkit/craftbukkit/v1_20_R1/block/data/CraftBlockData;
+       4: areturn
+
+  public boolean isAir();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: invokevirtual #171                // Method net/minecraft/world/level/block/state/IBlockData.i:()Z
+       7: ireturn
+
+  public boolean isFullCube();
+    Code:
+       0: aload_0
+       1: getfield      #65                 // Field craftMaterial:Lorg/bukkit/Material;
+       4: invokevirtual #177                // Method org/bukkit/Material.isOccluding:()Z
+       7: ireturn
+
+  public boolean isOpaque();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: invokevirtual #180                // Method net/minecraft/world/level/block/state/IBlockData.isOpaque:()Z
+       7: ireturn
+
+  public boolean isPowerSource();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: invokevirtual #183                // Method net/minecraft/world/level/block/state/IBlockData.m:()Z
+       7: ireturn
+
+  public boolean isLiquid();
+    Code:
+       0: aload_0
+       1: getfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       4: instanceof    #186                // class net/minecraft/world/level/block/BlockFluids
+       7: ireturn
+
+  public boolean isSolid();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: invokevirtual #190                // Method net/minecraft/world/level/block/state/IBlockData.e:()Z
+       7: ireturn
+
+  public float getHardness();
+    Code:
+       0: aload_0
+       1: getfield      #59                 // Field craftBlockData:Lorg/bukkit/craftbukkit/v1_20_R1/block/data/CraftBlockData;
+       4: invokevirtual #194                // Method org/bukkit/craftbukkit/v1_20_R1/block/data/CraftBlockData.getState:()Lnet/minecraft/world/level/block/state/IBlockData;
+       7: getfield      #197                // Field net/minecraft/world/level/block/state/IBlockData.n:F
+      10: freturn
+
+  public float getResistance();
+    Code:
+       0: aload_0
+       1: getfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       4: invokevirtual #201                // Method net/minecraft/world/level/block/Block.d:()F
+       7: freturn
+
+  public float getSlipperiness();
+    Code:
+       0: aload_0
+       1: getfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       4: invokevirtual #205                // Method net/minecraft/world/level/block/Block.h:()F
+       7: freturn
+
+  public int getLightValue();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: invokevirtual #209                // Method net/minecraft/world/level/block/state/IBlockData.h:()I
+       7: ireturn
+
+  public int getLightOpacity();
+    Code:
+       0: aload_0
+       1: getfield      #112                // Field opacity:I
+       4: ireturn
+
+  public boolean isFragileWhenPushed();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: invokevirtual #215                // Method net/minecraft/world/level/block/state/IBlockData.o:()Lnet/minecraft/world/level/material/EnumPistonReaction;
+       7: getstatic     #220                // Field net/minecraft/world/level/material/EnumPistonReaction.b:Lnet/minecraft/world/level/material/EnumPistonReaction;
+      10: if_acmpne     17
+      13: iconst_1
+      14: goto          18
+      17: iconst_0
+      18: ireturn
+
+  public boolean isUnpushable();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: invokevirtual #215                // Method net/minecraft/world/level/block/state/IBlockData.o:()Lnet/minecraft/world/level/material/EnumPistonReaction;
+       7: getstatic     #224                // Field net/minecraft/world/level/material/EnumPistonReaction.c:Lnet/minecraft/world/level/material/EnumPistonReaction;
+      10: if_acmpne     17
+      13: iconst_1
+      14: goto          18
+      17: iconst_0
+      18: ireturn
+
+  public boolean isTicksRandomly();
+    Code:
+       0: aload_0
+       1: getfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       4: aload_0
+       5: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       8: invokevirtual #229                // Method net/minecraft/world/level/block/Block.e_:(Lnet/minecraft/world/level/block/state/IBlockData;)Z
+      11: ireturn
+
+  public boolean isMovementBlocker();
+    Code:
+       0: aload_0
+       1: getfield      #65                 // Field craftMaterial:Lorg/bukkit/Material;
+       4: invokevirtual #232                // Method org/bukkit/Material.isSolid:()Z
+       7: ireturn
+
+  public boolean isBurnable();
+    Code:
+       0: aload_0
+       1: getfield      #65                 // Field craftMaterial:Lorg/bukkit/Material;
+       4: invokevirtual #235                // Method org/bukkit/Material.isBurnable:()Z
+       7: ireturn
+
+  public boolean isToolRequired();
+    Code:
+       0: iconst_0
+       1: ireturn
+
+  public boolean isReplacedDuringPlacement();
+    Code:
+       0: aload_0
+       1: getfield      #51                 // Field blockState:Lnet/minecraft/world/level/block/state/IBlockData;
+       4: invokevirtual #240                // Method net/minecraft/world/level/block/state/IBlockData.r:()Z
+       7: ireturn
+
+  public boolean isTranslucent();
+    Code:
+       0: aload_0
+       1: getfield      #95                 // Field isTranslucent:Z
+       4: ireturn
+
+  public boolean hasContainer();
+    Code:
+       0: aload_0
+       1: getfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       4: instanceof    #114                // class net/minecraft/world/level/block/ITileEntity
+       7: ireturn
+
+  public boolean isTile();
+    Code:
+       0: aload_0
+       1: getfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       4: instanceof    #114                // class net/minecraft/world/level/block/ITileEntity
+       7: ireturn
+
+  public com.sk89q.jnbt.CompoundTag getDefaultTile();
+    Code:
+       0: aload_0
+       1: getfield      #158                // Field tile:Lcom/sk89q/jnbt/CompoundTag;
+       4: areturn
+
+  public int getMapColor();
+    Code:
+       0: aload_0
+       1: getfield      #49                 // Field block:Lnet/minecraft/world/level/block/Block;
+       4: invokevirtual #249                // Method net/minecraft/world/level/block/Block.s:()Lnet/minecraft/world/level/material/MaterialMapColor;
+       7: getfield      #254                // Field net/minecraft/world/level/material/MaterialMapColor.ak:I
+      10: ireturn
+}
