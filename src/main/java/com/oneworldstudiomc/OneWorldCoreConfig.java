@@ -310,13 +310,6 @@ public class OneWorldCoreConfig {
 
     public static String server_mod_name;
 
-    public static boolean deepseek_enable;
-    public static String deepseek_apikey;
-    public static String deepseek_model;
-    public static String deepseek_system;
-    public static String deepseek_command;
-    public static String deepseek_chatfromat;
-
     public static boolean custom_no_villager;
     public static boolean custom_entity_tp_end;
     public static boolean custom_entity_tp_nether;
@@ -405,13 +398,6 @@ public class OneWorldCoreConfig {
 
         message_require_forge = getString("message.require_forge", "This server has mods that require Forge to be installed on the client. Contact your server admin for more details.");
         server_mod_name = getString("server_mod_name", "oneworldcore");
-
-        deepseek_enable = getBoolean("deepseek.enable", false);
-        deepseek_apikey = getString("deepseek.apikey", "oneworldcore");
-        deepseek_model = getString("deepseek.model", "deepseek-chat");
-        deepseek_system = getString("deepseek.system", "Your name is Xiaoxiaomo, you are 18 years old, and you are a cute girl!");
-        deepseek_command = getString("deepseek.command", "ai");
-        deepseek_chatfromat = getString("deepseek.chatfromat", "<DeepSeek> %s");
 
         custom_no_villager = getBoolean("custom.no_villager", false);
         custom_entity_tp_end = getBoolean("custom.entity_tp_end", true);
