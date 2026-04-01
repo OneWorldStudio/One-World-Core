@@ -1,6 +1,5 @@
 package com.oneworldstudiomc.util;
 
-import com.oneworldstudiomc.ai.deepseek.DeepSeek;
 import com.oneworldstudiomc.ai.koukou.KouKou;
 import java.util.concurrent.ExecutionException;
 import net.minecraft.network.chat.ChatType;
@@ -29,7 +28,6 @@ public class ChatPatchFix {
             AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, thisPlayer, s, new LazyPlayerSet(packetListener.server));
             String originalFormat = event.getFormat(), originalMessage = event.getMessage();
             Bukkit.getPluginManager().callEvent(event);
-            DeepSeek.init(thisPlayer, originalMessage);
             KouKou.chat("<%s>: %s".formatted(thisPlayer.getName(), originalMessage));
             if (PlayerChatEvent.getHandlerList().getRegisteredListeners().length != 0) {
                 // Evil plugins still listening to deprecated event
