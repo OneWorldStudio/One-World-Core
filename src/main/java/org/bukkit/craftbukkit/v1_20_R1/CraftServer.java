@@ -12,6 +12,12 @@ import com.oneworldstudiomc.api.ServerAPI;
 import com.oneworldstudiomc.bukkit.pluginfix.PluginDynamicRegistrFix;
 import com.oneworldstudiomc.forge.ForgeEventHandler;
 import com.oneworldstudiomc.forge.ForgeInjectBukkit;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.AsyncScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.BukkitAsyncScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.BukkitGlobalRegionScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.BukkitRegionScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.GlobalRegionScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.RegionScheduler;
 import com.oneworldstudiomc.plugins.MohistPlugin;
 import com.oneworldstudiomc.util.Level2LevelStem;
 import com.oneworldstudiomc.util.ProxyUtils;
@@ -274,6 +280,9 @@ public final class CraftServer implements Server {
     private final Logger logger = Logger.getLogger("Minecraft");
     private final ServicesManager servicesManager = new SimpleServicesManager();
     private final CraftScheduler scheduler = new CraftScheduler();
+    private final GlobalRegionScheduler globalRegionScheduler = new BukkitGlobalRegionScheduler();
+    private final RegionScheduler regionScheduler = new BukkitRegionScheduler();
+    private final AsyncScheduler asyncScheduler = new BukkitAsyncScheduler();
     private final CraftCommandMap commandMap = new CraftCommandMap(this);
     public final SimpleHelpMap helpMap = new SimpleHelpMap(this);
     private final StandardMessenger messenger = new StandardMessenger();
@@ -863,6 +872,21 @@ public final class CraftServer implements Server {
     @Override
     public CraftScheduler getScheduler() {
         return scheduler;
+    }
+
+    @Override
+    public GlobalRegionScheduler getGlobalRegionScheduler() {
+        return this.globalRegionScheduler;
+    }
+
+    @Override
+    public RegionScheduler getRegionScheduler() {
+        return this.regionScheduler;
+    }
+
+    @Override
+    public AsyncScheduler getAsyncScheduler() {
+        return this.asyncScheduler;
     }
 
     @Override
@@ -2023,6 +2047,26 @@ public final class CraftServer implements Server {
     }
 
     @Override
+    public boolean isGlobalTickThread() {
+        return this.isPrimaryThread();
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(org.bukkit.entity.Entity entity) {
+        return this.isPrimaryThread();
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(Location location) {
+        return this.isPrimaryThread();
+    }
+
+    @Override
+    public boolean isOwnedByCurrentRegion(World world, int chunkX, int chunkZ) {
+        return this.isPrimaryThread();
+    }
+
+    @Override
     public String getMotd() {
         return console.getMotd();
     }
@@ -2466,4 +2510,3 @@ public final class CraftServer implements Server {
         return net.minecraft.server.MinecraftServer.getServer().hasStopped();
     }
 }
-

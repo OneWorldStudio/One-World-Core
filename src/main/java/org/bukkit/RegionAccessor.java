@@ -6,6 +6,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.util.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -216,6 +217,20 @@ public interface RegionAccessor extends Keyed { // Paper
     Entity spawnEntity(@NotNull Location location, @NotNull EntityType type);
 
     /**
+     * Creates an entity at the given {@link Location} using the provided spawn
+     * reason.
+     *
+     * @param location The location to spawn the entity
+     * @param type The entity to spawn
+     * @param reason The spawn reason to propagate through Bukkit events
+     * @return Resulting Entity of this method
+     */
+    @NotNull
+    default Entity spawnEntity(@NotNull Location location, @NotNull EntityType type, @NotNull CreatureSpawnEvent.SpawnReason reason) {
+        return spawnEntity(location, type);
+    }
+
+    /**
      * Creates a new entity at the given {@link Location}.
      *
      * @param loc the location at which the entity will be spawned.
@@ -240,6 +255,22 @@ public interface RegionAccessor extends Keyed { // Paper
      */
     @NotNull
     public Entity spawnEntity(@NotNull Location loc, @NotNull EntityType type, boolean randomizeData);
+
+    /**
+     * Creates a new entity at the given {@link Location} using the provided
+     * spawn reason.
+     *
+     * @param loc the location at which the entity will be spawned.
+     * @param type the entity type that determines the entity to spawn.
+     * @param randomizeData whether or not the entity's data should be randomised
+     *                      before spawning.
+     * @param reason the Bukkit spawn reason to propagate for this entity.
+     * @return the spawned entity instance.
+     */
+    @NotNull
+    default Entity spawnEntity(@NotNull Location loc, @NotNull EntityType type, boolean randomizeData, @NotNull CreatureSpawnEvent.SpawnReason reason) {
+        return spawnEntity(loc, type, randomizeData);
+    }
 
     /**
      * Get a list of all entities in this RegionAccessor

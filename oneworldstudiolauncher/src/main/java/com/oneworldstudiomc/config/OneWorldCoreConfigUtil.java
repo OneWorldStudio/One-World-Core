@@ -22,8 +22,12 @@ import com.oneworldstudiomc.OneWorldCoreStart;
 import com.mohistmc.i18n.i18n;
 import com.mohistmc.yaml.file.YamlConfiguration;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class OneWorldCoreConfigUtil {
@@ -32,7 +36,7 @@ public class OneWorldCoreConfigUtil {
     public static final File LEGACY_STUDIO_YML = new File("oneworldstudio-config", "oneworldstudio.yml");
     public static final File LEGACY_CORE_STUDIO_YML = new File("oneworldcore-config", "oneworldstudio.yml");
     public static final File CORE_YML = new File("oneworldcore-config", "oneworldcore.yml");
-    public static final YamlConfiguration yml = YamlConfiguration.loadConfiguration(CORE_YML);
+    public static YamlConfiguration yml = new YamlConfiguration();
 
     public static void init() {
         try {
@@ -45,7 +49,8 @@ public class OneWorldCoreConfigUtil {
             if (!CORE_YML.exists()) {
                 CORE_YML.createNewFile();
             }
-            yml.load(CORE_YML);
+            repairCorruptedBinaryTags(CORE_YML);
+            loadMainConfigSafely();
             migrateLegacyKeyPrefixes();
         } catch (Exception e) {
             System.out.println("File init exception!");
@@ -106,6 +111,118 @@ public class OneWorldCoreConfigUtil {
 
     public static void setInstallationFinished(boolean finished) {
         yml.set("oneworldcore.installation-finished", finished);
+    }
+
+    private static void loadMainConfigSafely() {
+        yml = new YamlConfiguration();
+        try {
+            yml.load(CORE_YML);
+            return;
+        } catch (Throwable firstLoadFailure) {
+            if (repairCorruptedBinaryTags(CORE_YML)) {
+                yml = new YamlConfiguration();
+                try {
+                    yml.load(CORE_YML);
+                    return;
+                } catch (Throwable ignored) {
+                }
+            }
+
+            backupBrokenConfig(CORE_YML);
+            try {
+                Files.writeString(CORE_YML.toPath(), "", StandardCharsets.UTF_8);
+            } catch (IOException ignored) {
+            }
+
+            yml = new YamlConfiguration();
+            try {
+                yml.load(CORE_YML);
+            } catch (Throwable ignored) {
+            }
+            System.out.println("[OneWorldCore] Recreated invalid main config after load error: " + firstLoadFailure.getMessage());
+        }
+    }
+
+    private static void backupBrokenConfig(File file) {
+        if (file == null || !file.exists()) {
+            return;
+        }
+
+        try {
+            File backup = new File(file.getParentFile(), "oneworldcore.yml.broken-" + System.currentTimeMillis() + ".bak");
+            Files.copy(file.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            System.out.println("[OneWorldCore] Backed up invalid config to " + backup.getPath());
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static boolean repairCorruptedBinaryTags(File file) {
+        if (file == null || !file.exists()) {
+            return false;
+        }
+
+        try {
+            List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+            List<String> fixed = new ArrayList<>(lines.size());
+            boolean changed = false;
+
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                String normalized = line.toLowerCase(Locale.ROOT);
+                boolean malformedBinaryTag = normalized.contains("!<tag%3ayaml.org%2c2002%3abinary>")
+                        || normalized.contains("!<tag:yaml.org,2002:binary>")
+                        || normalized.contains("!!binary");
+                if (!malformedBinaryTag) {
+                    fixed.add(line);
+                    continue;
+                }
+
+                int indent = leadingSpaces(line);
+                String trimmed = line.trim();
+                int keySeparator = trimmed.indexOf(':');
+                if (keySeparator <= 0) {
+                    fixed.add(line);
+                    continue;
+                }
+
+                String key = trimmed.substring(0, keySeparator).trim();
+                String fallback = "msg".equalsIgnoreCase(key)
+                        ? "'[Server] Items will be cleared after %seconds% seconds'"
+                        : "''";
+                fixed.add(" ".repeat(indent) + key + ": " + fallback);
+                changed = true;
+
+                while (i + 1 < lines.size()) {
+                    String next = lines.get(i + 1);
+                    if (next.trim().isEmpty()) {
+                        i++;
+                        continue;
+                    }
+                    if (leadingSpaces(next) > indent) {
+                        i++;
+                        continue;
+                    }
+                    break;
+                }
+            }
+
+            if (changed) {
+                backupBrokenConfig(file);
+                Files.write(file.toPath(), fixed, StandardCharsets.UTF_8);
+                System.out.println("[OneWorldCore] Repaired invalid binary YAML entries in " + file.getPath());
+            }
+            return changed;
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    private static int leadingSpaces(String value) {
+        int i = 0;
+        while (i < value.length() && value.charAt(i) == ' ') {
+            i++;
+        }
+        return i;
     }
 
     private static boolean getBooleanCompat(String modernKey, String secondaryKey, String legacyKey, boolean defaultValue) {
@@ -196,4 +313,3 @@ public class OneWorldCoreConfigUtil {
         }
     }
 }
-

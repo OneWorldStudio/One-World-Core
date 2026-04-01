@@ -23,6 +23,7 @@ import net.minecraft.world.item.BlockItem;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.Validate;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.block.data.BlockData;
@@ -68,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -268,6 +270,10 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
     static final ItemMetaKey DAMAGE = new ItemMetaKey("Damage");
     @Specific(Specific.To.NBT)
     static final ItemMetaKey BLOCK_DATA = new ItemMetaKey("BlockStateTag");
+    @Specific(Specific.To.NBT)
+    static final ItemMetaKey CAN_PLACE_ON = new ItemMetaKey("CanPlaceOn", "placeable-keys");
+    @Specific(Specific.To.NBT)
+    static final ItemMetaKey CAN_DESTROY = new ItemMetaKey("CanDestroy", "destroyable-keys");
     static final ItemMetaKey BUKKIT_CUSTOM_TAG = new ItemMetaKey("PublicBukkitValues");
 
     // We store the raw original JSON representation of all text data. See SPIGOT-5063, SPIGOT-5656, SPIGOT-5304
@@ -282,6 +288,8 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
     private int hideFlag;
     private boolean unbreakable;
     private int damage;
+    private List<NamespacedKey> placeableKeys;
+    private List<NamespacedKey> destroyableKeys;
 
     private static final Set<String> HANDLED_TAGS = Sets.newHashSet();
     private static final CraftPersistentDataTypeRegistry DATA_TYPE_REGISTRY = new CraftPersistentDataTypeRegistry();
@@ -350,6 +358,12 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
         this.hideFlag = meta.hideFlag;
         this.unbreakable = meta.unbreakable;
         this.damage = meta.damage;
+        if (meta.hasPlaceableKeys()) {
+            this.placeableKeys = new ArrayList<>(meta.placeableKeys);
+        }
+        if (meta.hasDestroyableKeys()) {
+            this.destroyableKeys = new ArrayList<>(meta.destroyableKeys);
+        }
         this.unhandledTags.putAll(meta.unhandledTags);
         this.persistentDataContainer.putAll(meta.persistentDataContainer.getRaw());
 
@@ -414,6 +428,8 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
         if (tag.contains(DAMAGE.NBT)) {
             damage = tag.getInt(DAMAGE.NBT);
         }
+        this.placeableKeys = buildNamespacedKeys(tag, CAN_PLACE_ON);
+        this.destroyableKeys = buildNamespacedKeys(tag, CAN_DESTROY);
         if (tag.contains(BUKKIT_CUSTOM_TAG.NBT)) {
             CompoundTag compound = tag.getCompound(BUKKIT_CUSTOM_TAG.NBT);
             Set<String> keys = compound.getAllKeys();
@@ -587,6 +603,9 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
             setDamage(damage);
         }
 
+        this.placeableKeys = buildNamespacedKeys(map, CAN_PLACE_ON);
+        this.destroyableKeys = buildNamespacedKeys(map, CAN_DESTROY);
+
         String internal = SerializableMeta.getString(map, "internal", true);
         if (internal != null) {
             ByteArrayInputStream buf = new ByteArrayInputStream(Base64.getDecoder().decode(internal));
@@ -682,6 +701,53 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
         return result;
     }
 
+    static List<NamespacedKey> buildNamespacedKeys(CompoundTag tag, ItemMetaKey key) {
+        if (!tag.contains(key.NBT, CraftMagicNumbers.NBT.TAG_LIST)) {
+            return null;
+        }
+
+        ListTag values = tag.getList(key.NBT, CraftMagicNumbers.NBT.TAG_STRING);
+        List<NamespacedKey> result = new ArrayList<>(values.size());
+        for (int i = 0; i < values.size(); i++) {
+            NamespacedKey namespacedKey = CraftNamespacedKey.fromStringOrNull(values.getString(i));
+            if (namespacedKey != null) {
+                result.add(namespacedKey);
+            }
+        }
+
+        return result.isEmpty() ? null : result;
+    }
+
+    static List<NamespacedKey> buildNamespacedKeys(Map<String, Object> map, ItemMetaKey key) {
+        Iterable<?> values = SerializableMeta.getObject(Iterable.class, map, key.BUKKIT, true);
+        if (values == null) {
+            return null;
+        }
+
+        List<NamespacedKey> result = new ArrayList<>();
+        for (Object value : values) {
+            NamespacedKey namespacedKey = deserializeNamespacedKey(value);
+            if (namespacedKey != null) {
+                result.add(namespacedKey);
+            }
+        }
+
+        return result.isEmpty() ? null : result;
+    }
+
+    private static NamespacedKey deserializeNamespacedKey(Object value) {
+        if (value instanceof NamespacedKey namespacedKey) {
+            return namespacedKey;
+        }
+        if (value instanceof Material material && material.isBlock()) {
+            return material.getKey();
+        }
+        if (value == null) {
+            return null;
+        }
+        return NamespacedKey.fromString(value.toString());
+    }
+
     @Overridden
     void applyToItem(CompoundTag itemTag) {
         if (hasDisplayName()) {
@@ -721,6 +787,9 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
         if (hasDamage()) {
             itemTag.putInt(DAMAGE.NBT, damage);
         }
+
+        applyNamespacedKeys(placeableKeys, itemTag, CAN_PLACE_ON);
+        applyNamespacedKeys(destroyableKeys, itemTag, CAN_DESTROY);
 
         for (Map.Entry<String, Tag> e : unhandledTags.entrySet()) {
             itemTag.put(e.getKey(), e.getValue());
@@ -803,6 +872,22 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
         tag.put(key.NBT, list);
     }
 
+    static void applyNamespacedKeys(Collection<NamespacedKey> keys, CompoundTag tag, ItemMetaKey key) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        ListTag list = new ListTag();
+        for (NamespacedKey namespacedKey : keys) {
+            if (namespacedKey != null) {
+                list.add(StringTag.valueOf(namespacedKey.toString()));
+            }
+        }
+        if (!list.isEmpty()) {
+            tag.put(key.NBT, list);
+        }
+    }
+
     void setDisplayTag(CompoundTag tag, String key, Tag value) {
         final CompoundTag display = tag.getCompound(DISPLAY.NBT);
 
@@ -823,7 +908,7 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
         if (this.getForgeCaps() != null && !this.getForgeCaps().isEmpty()) {
             return false;
         }
-        return !(hasDisplayName() || hasLocalizedName() || hasEnchants() || (lore != null) || hasCustomModelData() || hasBlockData() || hasRepairCost() || !unhandledTags.isEmpty() || !persistentDataContainer.isEmpty() || hideFlag != 0 || isUnbreakable() || hasDamage() || hasAttributeModifiers());
+        return !(hasDisplayName() || hasLocalizedName() || hasEnchants() || (lore != null) || hasCustomModelData() || hasBlockData() || hasRepairCost() || !unhandledTags.isEmpty() || !persistentDataContainer.isEmpty() || hideFlag != 0 || isUnbreakable() || hasDamage() || hasAttributeModifiers() || hasPlaceableKeys() || hasDestroyableKeys());
     }
 
     // Paper start
@@ -1091,6 +1176,52 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
     }
 
     @Override
+    public boolean hasPlaceableKeys() {
+        return this.placeableKeys != null && !this.placeableKeys.isEmpty();
+    }
+
+    @Override
+    public Collection<NamespacedKey> getPlaceableKeys() {
+        return hasPlaceableKeys() ? Collections.unmodifiableList(this.placeableKeys) : Collections.emptyList();
+    }
+
+    @Override
+    public void setPlaceableKeys(@Nullable Collection<NamespacedKey> placeableKeys) {
+        this.placeableKeys = normalizeNamespacedKeys(placeableKeys);
+    }
+
+    @Override
+    public boolean hasDestroyableKeys() {
+        return this.destroyableKeys != null && !this.destroyableKeys.isEmpty();
+    }
+
+    @Override
+    public Collection<NamespacedKey> getDestroyableKeys() {
+        return hasDestroyableKeys() ? Collections.unmodifiableList(this.destroyableKeys) : Collections.emptyList();
+    }
+
+    @Override
+    public void setDestroyableKeys(@Nullable Collection<NamespacedKey> destroyableKeys) {
+        this.destroyableKeys = normalizeNamespacedKeys(destroyableKeys);
+    }
+
+    private List<NamespacedKey> normalizeNamespacedKeys(@Nullable Collection<NamespacedKey> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return null;
+        }
+
+        List<NamespacedKey> normalized = new ArrayList<>(keys.size());
+        for (Object value : keys) {
+            NamespacedKey namespacedKey = deserializeNamespacedKey(value);
+            if (namespacedKey != null) {
+                normalized.add(namespacedKey);
+            }
+        }
+
+        return normalized.isEmpty() ? null : normalized;
+    }
+
+    @Override
     public boolean hasAttributeModifiers() {
         return attributeModifiers != null && !attributeModifiers.isEmpty();
     }
@@ -1296,6 +1427,8 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
                 && (this.hideFlag == that.hideFlag)
                 && (this.isUnbreakable() == that.isUnbreakable())
                 && (this.hasDamage() ? that.hasDamage() && this.damage == that.damage : !that.hasDamage())
+                && (Objects.equals(this.placeableKeys, that.placeableKeys))
+                && (Objects.equals(this.destroyableKeys, that.destroyableKeys))
                 && (this.version == that.version);
     }
 
@@ -1330,6 +1463,8 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
         hash = 61 * hash + (isUnbreakable() ? 1231 : 1237);
         hash = 61 * hash + (hasDamage() ? this.damage : 0);
         hash = 61 * hash + (hasAttributeModifiers() ? this.attributeModifiers.hashCode() : 0);
+        hash = 61 * hash + (hasPlaceableKeys() ? this.placeableKeys.hashCode() : 0);
+        hash = 61 * hash + (hasDestroyableKeys() ? this.destroyableKeys.hashCode() : 0);
         hash = 61 * hash + version;
         hash = 61 * hash + (this.forgeCaps != null ? this.forgeCaps.hashCode() : 0);
         return hash;
@@ -1350,6 +1485,12 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
             }
             if (this.hasAttributeModifiers()) {
                 clone.attributeModifiers = LinkedHashMultimap.create(this.attributeModifiers);
+            }
+            if (this.hasPlaceableKeys()) {
+                clone.placeableKeys = new ArrayList<>(this.placeableKeys);
+            }
+            if (this.hasDestroyableKeys()) {
+                clone.destroyableKeys = new ArrayList<>(this.destroyableKeys);
             }
             clone.persistentDataContainer = new CraftPersistentDataContainer(this.persistentDataContainer.getRaw(), DATA_TYPE_REGISTRY);
             clone.hideFlag = this.hideFlag;
@@ -1416,6 +1557,12 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
 
         if (hasDamage()) {
             builder.put(DAMAGE.BUKKIT, damage);
+        }
+        if (hasPlaceableKeys()) {
+            builder.put(CAN_PLACE_ON.BUKKIT, serializeNamespacedKeys(this.placeableKeys));
+        }
+        if (hasDestroyableKeys()) {
+            builder.put(CAN_DESTROY.BUKKIT, serializeNamespacedKeys(this.destroyableKeys));
         }
 
         final Map<String, Tag> internalTags = new HashMap<>(unhandledTags);
@@ -1490,6 +1637,16 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
         builder.put(key.BUKKIT, mods);
     }
 
+    static List<String> serializeNamespacedKeys(Collection<NamespacedKey> keys) {
+        List<String> serialized = new ArrayList<>(keys.size());
+        for (NamespacedKey key : keys) {
+            if (key != null) {
+                serialized.add(key.toString());
+            }
+        }
+        return serialized;
+    }
+
     static void safelyAdd(Iterable<?> addFrom, Collection<String> addTo, boolean possiblyJsonInput) {
         if (addFrom == null) {
             return;
@@ -1562,6 +1719,8 @@ class CraftMetaItem implements ItemMeta, Damageable, Repairable, BlockDataMeta {
                         HIDEFLAGS.NBT,
                         UNBREAKABLE.NBT,
                         DAMAGE.NBT,
+                        CAN_PLACE_ON.NBT,
+                        CAN_DESTROY.NBT,
                         BUKKIT_CUSTOM_TAG.NBT,
                         ATTRIBUTES.NBT,
                         ATTRIBUTES_IDENTIFIER.NBT,

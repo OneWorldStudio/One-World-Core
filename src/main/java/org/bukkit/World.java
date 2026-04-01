@@ -2571,6 +2571,58 @@ public interface World extends RegionAccessor, WorldInfo, PluginMessageRecipient
      */
     void playSound(@NotNull Entity entity, @NotNull String sound, @NotNull SoundCategory category, float volume, float pitch);
 
+    // Paper start - Adventure sound compatibility
+    /**
+     * Play an Adventure sound at explicit coordinates in this world.
+     *
+     * @param sound adventure sound
+     * @param x x-coordinate
+     * @param y y-coordinate
+     * @param z z-coordinate
+     */
+    default void playSound(@NotNull net.kyori.adventure.sound.Sound sound, double x, double y, double z) {
+        this.playSound(
+                new Location(this, x, y, z),
+                sound.name().asString(),
+                worldAdventureSourceToCategory(sound.source()),
+                sound.volume(),
+                sound.pitch()
+        );
+    }
+
+    /**
+     * Play an Adventure sound in this world using an emitter.
+     *
+     * @param sound adventure sound
+     * @param emitter sound emitter
+     */
+    default void playSound(@NotNull net.kyori.adventure.sound.Sound sound, @NotNull net.kyori.adventure.sound.Sound.Emitter emitter) {
+        if (emitter instanceof Entity entity) {
+            final Location location = entity.getLocation();
+            this.playSound(sound, location.getX(), location.getY(), location.getZ());
+            return;
+        }
+
+        final Location spawn = this.getSpawnLocation();
+        this.playSound(sound, spawn.getX(), spawn.getY(), spawn.getZ());
+    }
+
+    private static @NotNull SoundCategory worldAdventureSourceToCategory(@NotNull net.kyori.adventure.sound.Sound.Source source) {
+        return switch (source) {
+            case MASTER -> SoundCategory.MASTER;
+            case MUSIC -> SoundCategory.MUSIC;
+            case RECORD -> SoundCategory.RECORDS;
+            case WEATHER -> SoundCategory.WEATHER;
+            case BLOCK -> SoundCategory.BLOCKS;
+            case HOSTILE -> SoundCategory.HOSTILE;
+            case NEUTRAL -> SoundCategory.NEUTRAL;
+            case PLAYER -> SoundCategory.PLAYERS;
+            case AMBIENT -> SoundCategory.AMBIENT;
+            case VOICE -> SoundCategory.VOICE;
+        };
+    }
+    // Paper end - Adventure sound compatibility
+
     /**
      * Get an array containing the names of all the {@link GameRule}s.
      *

@@ -192,6 +192,15 @@ public interface Player extends HumanEntity, Conversable, OfflinePlayer, PluginM
     }
 
     /**
+     * Gets the item the player is actively using.
+     *
+     * @return the active item, or null if no item is being used
+     */
+    default @Nullable ItemStack getActiveItem() {
+        return this.getItemInUse();
+    }
+
+    /**
      * Gets the tristate value of a permission node.
      *
      * @param permission permission node

@@ -363,7 +363,7 @@ public class OneWorldCoreConfig {
 
         clear_enable = getBoolean("entity.clear.enable", false);
         clear_time = getInt("entity.clear.time", 1800);
-        clear_countdown_msg = getString("entity.clear.countdown.msg", "[Server] Р’В§cItems will be cleared after %seconds% secondsРїСРѓ");
+        clear_countdown_msg = getString("entity.clear.countdown.msg", "[Server] Items will be cleared after %seconds% seconds");
 
         clear_item = getBoolean("entity.clear.item.enable", false);
         clear_item_whitelist = getStringList("entity.clear.item.whitelist", new ArrayList<>());
@@ -382,8 +382,7 @@ public class OneWorldCoreConfig {
         motdEnable = getBoolean("motd.enable", false);
         motdFirstLine = getString("motd.firstline", "<RAINBOW1>A Minecraft Server</RAINBOW>");
         motdSecondLine = getString("motd.secondline", "");
-
-        pingCommandOutput = getString("settings.messages.ping-command-output", "Р’В§2%s's ping is %sms");
+        pingCommandOutput = getString("settings.messages.ping-command-output", "%s's ping is %sms");
 
         doFireTick = getBoolean("events.fire_tick", false);
         explosion = getBoolean("events.explosion", false);
@@ -412,7 +411,7 @@ public class OneWorldCoreConfig {
         deepseek_model = getString("deepseek.model", "deepseek-chat");
         deepseek_system = getString("deepseek.system", "Your name is Xiaoxiaomo, you are 18 years old, and you are a cute girl!");
         deepseek_command = getString("deepseek.command", "ai");
-        deepseek_chatfromat = getString("deepseek.chatfromat", "<РµВ°РЏРµВ°РЏРµСћРЃ> %s");
+        deepseek_chatfromat = getString("deepseek.chatfromat", "<DeepSeek> %s");
 
         custom_no_villager = getBoolean("custom.no_villager", false);
         custom_entity_tp_end = getBoolean("custom.entity_tp_end", true);
@@ -483,5 +482,6 @@ public class OneWorldCoreConfig {
         }
     }
 }
+
 
 

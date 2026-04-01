@@ -205,6 +205,15 @@ public interface Plugin extends TabExecutor {
     }
     // Paper end
 
+    @NotNull
+    default com.oneworldstudiomc.paper.plugin.configuration.PluginMeta getPluginMeta() {
+        return new com.oneworldstudiomc.paper.plugin.configuration.SimplePluginMeta(
+                getName(),
+                getDescription().getVersion(),
+                false
+        );
+    }
+
     /**
      * Returns the name of the plugin.
      * <p>

@@ -213,6 +213,16 @@ public abstract class JavaPlugin extends PluginBase {
 
     @NotNull
     @Override
+    public com.oneworldstudiomc.paper.plugin.configuration.PluginMeta getPluginMeta() {
+        return new com.oneworldstudiomc.paper.plugin.configuration.SimplePluginMeta(
+                getName(),
+                getDescription().getVersion(),
+                false
+        );
+    }
+
+    @NotNull
+    @Override
     public FileConfiguration getConfig() {
         if (newConfig == null) {
             reloadConfig();
@@ -514,4 +524,3 @@ public abstract class JavaPlugin extends PluginBase {
         return plugin;
     }
 }
-

@@ -32,10 +32,16 @@ public class EntityEventDispatcher {
 
     @SubscribeEvent(receiveCanceled = true)
     public void changeTargetEvent(LivingChangeTargetEvent event) {
+        if (event.getTargetType() instanceof LivingChangeTargetEvent.LivingTargetType targetType
+                && (targetType == LivingChangeTargetEvent.LivingTargetType.MOB_TARGET
+                || targetType == LivingChangeTargetEvent.LivingTargetType.BEHAVIOR_TARGET)) {
+            return;
+        }
+
         EntityTargetEvent.TargetReason reason = event.getReason();
         LivingEntity entityliving = event.getNewTarget();
 
-        if (entityliving instanceof Mob mob) {
+        if (event.getEntity() instanceof Mob mob) {
             if (!AsyncCatcher.catchAsync() && event.isFireCBEvent()) {
                 if (reason == EntityTargetEvent.TargetReason.UNKNOWN && mob.getTarget() != null && entityliving == null) {
                     reason = mob.getTarget().isAlive() ? EntityTargetEvent.TargetReason.FORGOT_TARGET : EntityTargetEvent.TargetReason.TARGET_DIED;
@@ -57,4 +63,3 @@ public class EntityEventDispatcher {
         }
     }
 }
-

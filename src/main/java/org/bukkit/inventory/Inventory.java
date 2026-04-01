@@ -357,6 +357,20 @@ public interface Inventory extends Iterable<ItemStack> {
     @Nullable
     public InventoryHolder getHolder();
 
+    /**
+     * Gets the block or entity belonging to the open inventory.
+     * <p>
+     * Paper adds a snapshot toggle. On this implementation we always return
+     * the regular holder for compatibility with Paper plugins.
+     *
+     * @param useSnapshot ignored, snapshot behavior is not differentiated
+     * @return The holder of the inventory; null if it has no holder.
+     */
+    @Nullable
+    default InventoryHolder getHolder(boolean useSnapshot) {
+        return getHolder();
+    }
+
     @NotNull
     @Override
     public ListIterator<ItemStack> iterator();

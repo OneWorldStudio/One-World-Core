@@ -244,8 +244,8 @@ public final class PluginClassLoader extends URLClassLoader implements Remapping
                             if (!bypassProtocolLibRemap) {
                                 classBytes = Remapper.SWITCH_TABLE_FIXER.apply(classBytes);
                                 classBytes = Bukkit.getUnsafe().processClass(description, path, classBytes);
-                                classBytes = PluginFixManager.injectPluginFix(name, classBytes); // Mohist - Inject plugin fix
                             }
+                            classBytes = PluginFixManager.injectPluginFix(name, classBytes); // Mohist - Inject plugin fix
                             return classBytes;
                         }
                     };
@@ -338,4 +338,3 @@ public final class PluginClassLoader extends URLClassLoader implements Remapping
         javaPlugin.init(loader, loader.server, description, dataFolder, file, this);
     }
 }
-

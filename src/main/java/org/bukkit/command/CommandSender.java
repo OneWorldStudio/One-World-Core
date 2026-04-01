@@ -108,6 +108,18 @@ public interface CommandSender extends net.kyori.adventure.audience.Audience, Pe
         this.sendMessage(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(message));
     }
 
+    @Override
+    default void sendActionBar(final @NotNull net.kyori.adventure.text.Component message) {
+        if (this instanceof org.bukkit.entity.Player player) {
+            player.spigot().sendMessage(
+                net.md_5.bungee.api.ChatMessageType.ACTION_BAR,
+                net.md_5.bungee.chat.ComponentSerializer.parse(
+                    net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson().serialize(message)
+                )
+            );
+        }
+    }
+
     /**
      * Sends a message with the MiniMessage format to the command sender.
      * <p>

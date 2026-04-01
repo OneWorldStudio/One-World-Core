@@ -1,0 +1,1 @@
+{"id":"parties","name":"Parties","version":"3.2.17","description":"Party manager for Minecraft servers","url":"https://alessiodp.com/parties","authors":["AlessioDP"],"dependencies":[{"id":"lastloginapi","optional":true},{"id":"premiumvanish","optional":true},{"id":"redisbungee","optional":true}],"main":"com.alessiodp.parties.velocity.bootstrap.VelocityPartiesBootstrap"}

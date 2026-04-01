@@ -1,6 +1,9 @@
 package org.bukkit;
 
 import com.google.common.collect.ImmutableList;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.AsyncScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.GlobalRegionScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.RegionScheduler;
 import org.bukkit.Warning.WarningState;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.block.data.BlockData;
@@ -583,6 +586,30 @@ public interface Server extends PluginMessageRecipient {
      */
     @NotNull
     public BukkitScheduler getScheduler();
+
+    /**
+     * Gets the Paper-compatible global region scheduler.
+     *
+     * @return the global region scheduler
+     */
+    @NotNull
+    GlobalRegionScheduler getGlobalRegionScheduler();
+
+    /**
+     * Gets the Paper-compatible region scheduler.
+     *
+     * @return the region scheduler
+     */
+    @NotNull
+    RegionScheduler getRegionScheduler();
+
+    /**
+     * Gets the Paper-compatible async scheduler.
+     *
+     * @return the async scheduler
+     */
+    @NotNull
+    AsyncScheduler getAsyncScheduler();
 
     /**
      * Gets a services manager.
@@ -1365,6 +1392,47 @@ public interface Server extends PluginMessageRecipient {
      *     false otherwise
      */
     boolean isPrimaryThread();
+
+    /**
+     * Paper-compatible alias for the global tick thread check.
+     *
+     * @return true when called from the main server thread
+     */
+    default boolean isGlobalTickThread() {
+        return this.isPrimaryThread();
+    }
+
+    /**
+     * Checks whether the current thread owns the given entity's region.
+     *
+     * @param entity entity to check
+     * @return true when safe to access from the current thread
+     */
+    default boolean isOwnedByCurrentRegion(@NotNull Entity entity) {
+        return this.isPrimaryThread();
+    }
+
+    /**
+     * Checks whether the current thread owns the given location's region.
+     *
+     * @param location location to check
+     * @return true when safe to access from the current thread
+     */
+    default boolean isOwnedByCurrentRegion(@NotNull Location location) {
+        return this.isPrimaryThread();
+    }
+
+    /**
+     * Checks whether the current thread owns the given chunk region.
+     *
+     * @param world world to check
+     * @param chunkX chunk x coordinate
+     * @param chunkZ chunk z coordinate
+     * @return true when safe to access from the current thread
+     */
+    default boolean isOwnedByCurrentRegion(@NotNull World world, int chunkX, int chunkZ) {
+        return this.isPrimaryThread();
+    }
 
     /**
      * Gets the message that is displayed on the server list.

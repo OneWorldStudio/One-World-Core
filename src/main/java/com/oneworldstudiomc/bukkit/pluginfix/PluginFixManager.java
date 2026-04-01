@@ -13,18 +13,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntConsumer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.chunk.LevelChunk;
+import org.bukkit.entity.EntityType;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.VarInsnNode;
 
 import static org.objectweb.asm.Opcodes.ARETURN;
 
@@ -1376,19 +1379,41 @@ public class PluginFixManager {
         if (normalizedClassName.startsWith("de.oliver.fancyholograms.")) {
             return patch(clazz, PluginFixManager::fixFancyHologramsLocationAccessors);
         }
+        if (normalizedClassName.startsWith("world.bentobox.")) {
+            clazz = patch(clazz, PluginFixManager::fixBentoBoxPatternTypeCompat);
+        }
         if (normalizedClassName.equals("com.onarandombox.MultiverseCore.utils.WorldManager")) {
             return patch(clazz, MultiverseCore::fix);
         }
         if (normalizedClassName.startsWith("io.lumine.mythiccrucible.")) {
             clazz = patch(clazz, PluginFixManager::fixMythicCrucibleInventoryViewInvoke);
         }
+        if (normalizedClassName.startsWith("io.lumine.mythic.")) {
+            clazz = patch(clazz, PluginFixManager::fixMythicEntityTypeConstants);
+            clazz = patch(clazz, PluginFixManager::fixMythicAttributeApiCompat);
+        }
+        if (normalizedClassName.equals("revxrsal.zapper.DependencyManager")) {
+            return patch(clazz, PluginFixManager::fixZapperDependencyManager);
+        }
+        if (normalizedClassName.endsWith(".libs.lamp.bukkit.brigadier.CommodoreProvider")) {
+            return patch(clazz, PluginFixManager::fixLampCommodoreProvider);
+        }
         if (normalizedClassName.startsWith("com.willfp.libreforge.")) {
             clazz = patch(clazz, PluginFixManager::fixLibreforgePaperOnlyListeners);
         }
         Consumer<ClassNode> patcher = switch (normalizedClassName) {
             case "com.sk89q.worldedit.bukkit.BukkitAdapter" -> WorldEdit::handleBukkitAdapter;
+            case "com.sk89q.worldedit.bukkit.adapter.BukkitImplLoader" -> WorldEdit::handleBukkitImplLoader;
             case "com.sk89q.worldedit.bukkit.adapter.Refraction" -> WorldEdit::handlePickName;
             case "com.sk89q.worldedit.bukkit.adapter.impl.v1_20_R1.PaperweightAdapter$SpigotWatchdog" -> WorldEdit::handleWatchdog;
+            case "com.comphenix.protocol.wrappers.WrappedChatComponent" -> PluginFixManager::fixProtocolLibWrappedChatComponent;
+            case "itemsadder.m.aun" -> PluginFixManager::fixAdventureSerializerBuilderOptionsCompat;
+            case "itemsadder.m.ajw" -> PluginFixManager::fixItemsAdderPacketConnectionCompat;
+            case "itemsadder.m.ya" -> PluginFixManager::fixItemsAdderServerVersionGate;
+            case "itemsadder.m.yc" -> PluginFixManager::fixItemsAdderNmsVersionSwitchMap;
+            case "ia.sh.com.alessiodp.libby.LibraryManager" -> PluginFixManager::fixItemsAdderLibbyLibraryManager;
+            case "ia.sh.com.alessiodp.libby.transitive.TransitiveDependencyHelper" -> PluginFixManager::fixItemsAdderLibbyTransitiveDependencyHelper;
+            case "net.kyori.adventure.platform.bukkit.BukkitComponentSerializer" -> PluginFixManager::fixAdventureSerializerBuilderOptionsCompat;
             case "com.sk89q.worldedit.bukkit.adapter.impl.fawe.v1_20_R1.PaperweightFaweAdapter" -> PluginFixManager::fixFawePaperweightFaweAdapter;
             case "com.sk89q.worldedit.bukkit.adapter.impl.fawe.v1_20_R1.PaperweightBlockMaterial" -> PluginFixManager::fixFawePaperweightBlockMaterial;
             case "com.sk89q.worldedit.bukkit.adapter.impl.fawe.v1_20_R1.PaperweightPlatformAdapter" -> PluginFixManager::fixFawePaperweightPlatformAdapter;
@@ -1409,6 +1434,7 @@ public class PluginFixManager {
             case "net.coreprotect.listener.ListenerHandler" -> node -> helloWorld(node, "net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer", "mohist");
             case "io.lumine.mythic.bukkit.utils.version.ServerVersion" -> PluginFixManager::fixMythicMobsServerVersion;
             case "io.lumine.mythic.bukkit.BukkitBootstrap" -> PluginFixManager::fixMythicBukkitBootstrap;
+            case "io.lumine.mythic.bukkit.adapters.BukkitParticle" -> PluginFixManager::fixMythicBukkitParticleCompat;
             case "io.lumine.mythic.core.volatilecode.v1_20_R1.VolatileAIHandlerImpl" -> PluginFixManager::fixMythicMobsAIHandler;
             case "io.lumine.mythic.core.skills.mechanics.SoundEffect" -> PluginFixManager::fixFancyHologramsLocationAccessors;
             case "io.lumine.mythiccrucible.items.ItemManager" -> PluginFixManager::fixMythicCrucibleItemManager;
@@ -1447,6 +1473,420 @@ public class PluginFixManager {
         ClassWriter writer = new ClassWriter(0);
         node.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static void fixProtocolLibWrappedChatComponent(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"<clinit>".equals(methodNode.name) || !"()V".equals(methodNode.desc)) {
+                continue;
+            }
+
+            InsnList toInject = new InsnList();
+            toInject.add(new LdcInsnNode(Type.getType("Lnet/minecraft/network/chat/Component$Serializer;")));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "SERIALIZER",
+                    "Ljava/lang/Class;"
+            ));
+            toInject.add(new LdcInsnNode(Type.getType("Lnet/minecraft/network/chat/Component;")));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "COMPONENT",
+                    "Ljava/lang/Class;"
+            ));
+            toInject.add(new LdcInsnNode(Type.getType("Lcom/google/gson/Gson;")));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "GSON_CLASS",
+                    "Ljava/lang/Class;"
+            ));
+            toInject.add(new LdcInsnNode(Type.getType("Lnet/minecraft/network/chat/MutableComponent;")));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    "java/util/Optional",
+                    "of",
+                    "(Ljava/lang/Object;)Ljava/util/Optional;",
+                    false
+            ));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "MUTABLE_COMPONENT_CLASS",
+                    "Ljava/util/Optional;"
+            ));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "protocolLibCreateChatSerializerGson",
+                    "()Ljava/lang/Object;",
+                    false
+            ));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "GSON",
+                    "Ljava/lang/Object;"
+            ));
+            toInject.add(new InsnNode(Opcodes.ACONST_NULL));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "DESERIALIZE",
+                    "Lcom/comphenix/protocol/reflect/accessors/MethodAccessor;"
+            ));
+            toInject.add(new LdcInsnNode(Type.getObjectType(node.name)));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKEVIRTUAL,
+                    "java/lang/Class",
+                    "getClassLoader",
+                    "()Ljava/lang/ClassLoader;",
+                    false
+            ));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "protocolLibCreateWrappedChatSerializeAccessor",
+                    "(Ljava/lang/ClassLoader;)Ljava/lang/Object;",
+                    false
+            ));
+            toInject.add(new org.objectweb.asm.tree.TypeInsnNode(
+                    Opcodes.CHECKCAST,
+                    "com/comphenix/protocol/reflect/accessors/MethodAccessor"
+            ));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "SERIALIZE_COMPONENT",
+                    "Lcom/comphenix/protocol/reflect/accessors/MethodAccessor;"
+            ));
+            toInject.add(new LdcInsnNode(Type.getObjectType(node.name)));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKEVIRTUAL,
+                    "java/lang/Class",
+                    "getClassLoader",
+                    "()Ljava/lang/ClassLoader;",
+                    false
+            ));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "protocolLibCreateCraftChatMessageAccessor",
+                    "(Ljava/lang/ClassLoader;)Ljava/lang/Object;",
+                    false
+            ));
+            toInject.add(new org.objectweb.asm.tree.TypeInsnNode(
+                    Opcodes.CHECKCAST,
+                    "com/comphenix/protocol/reflect/accessors/MethodAccessor"
+            ));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "CONSTRUCT_COMPONENT",
+                    "Lcom/comphenix/protocol/reflect/accessors/MethodAccessor;"
+            ));
+            toInject.add(new InsnNode(Opcodes.ACONST_NULL));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "CONSTRUCT_TEXT_COMPONENT",
+                    "Lcom/comphenix/protocol/reflect/accessors/ConstructorAccessor;"
+            ));
+            toInject.add(new InsnNode(Opcodes.ACONST_NULL));
+            toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                    Opcodes.PUTSTATIC,
+                    node.name,
+                    "CODEC",
+                    "Lcom/comphenix/protocol/wrappers/codecs/WrappedCodec;"
+            ));
+            toInject.add(new InsnNode(Opcodes.RETURN));
+
+            methodNode.instructions = toInject;
+            methodNode.tryCatchBlocks.clear();
+            methodNode.maxStack = 3;
+            methodNode.maxLocals = 0;
+            clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixAdventureSerializerBuilderOptionsCompat(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"<clinit>".equals(methodNode.name) || !"()V".equals(methodNode.desc)) {
+                continue;
+            }
+
+            boolean patched = false;
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (!(insn instanceof MethodInsnNode methodInsnNode)) {
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() != Opcodes.INVOKEINTERFACE) {
+                    continue;
+                }
+                if (!"net/kyori/adventure/text/serializer/gson/GsonComponentSerializer$Builder".equals(methodInsnNode.owner)) {
+                    continue;
+                }
+                if (!"options".equals(methodInsnNode.name)) {
+                    continue;
+                }
+                if (!"(Lnet/kyori/option/OptionState;)Lnet/kyori/adventure/text/serializer/gson/GsonComponentSerializer$Builder;".equals(methodInsnNode.desc)) {
+                    continue;
+                }
+
+                // Some plugins bundle newer Adventure platform/text helpers but still link
+                // against the server's older GsonComponentSerializer.Builder, which does not
+                // expose Builder#options(OptionState). Drop only the unsupported call and keep
+                // the rest of the static initializer intact.
+                methodNode.instructions.set(methodInsnNode, new InsnNode(Opcodes.POP));
+                patched = true;
+            }
+
+            if (patched) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    private static void fixBentoBoxPatternTypeCompat(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            boolean patched = false;
+
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (!(insn instanceof MethodInsnNode methodInsnNode)) {
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() != Opcodes.INVOKESTATIC) {
+                    continue;
+                }
+                if (!"org/bukkit/block/banner/PatternType".equals(methodInsnNode.owner)) {
+                    continue;
+                }
+                if (!"valueOf".equals(methodInsnNode.name)) {
+                    continue;
+                }
+                if (!"(Ljava/lang/String;)Lorg/bukkit/block/banner/PatternType;".equals(methodInsnNode.desc)) {
+                    continue;
+                }
+
+                methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                methodInsnNode.name = "patternTypeValueOfCompat";
+                methodInsnNode.itf = false;
+                patched = true;
+            }
+
+            if (patched) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    private static void fixItemsAdderServerVersionGate(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"qM".equals(methodNode.name) || !"()Z".equals(methodNode.desc)) {
+                continue;
+            }
+
+            InsnList toInject = new InsnList();
+            toInject.add(new InsnNode(Opcodes.ICONST_1));
+            toInject.add(new InsnNode(Opcodes.IRETURN));
+            methodNode.instructions = toInject;
+            methodNode.tryCatchBlocks.clear();
+            clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixItemsAdderNmsVersionSwitchMap(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"<clinit>".equals(methodNode.name) || !"()V".equals(methodNode.desc)) {
+                continue;
+            }
+
+            boolean patched = false;
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (insn.getOpcode() != Opcodes.RETURN) {
+                    continue;
+                }
+
+                InsnList fallbackMappings = new InsnList();
+                addItemsAdderSwitchMapFallback(fallbackMappings, node.name, "v1_20_R1", 10);
+                addItemsAdderSwitchMapFallback(fallbackMappings, node.name, "v1_20_R2", 10);
+                addItemsAdderSwitchMapFallback(fallbackMappings, node.name, "v1_20_R3", 10);
+                addItemsAdderSwitchMapFallback(fallbackMappings, node.name, "v1_20_4", 10);
+                addItemsAdderSwitchMapFallback(fallbackMappings, node.name, "v1_20_5", 10);
+                methodNode.instructions.insertBefore(insn, fallbackMappings);
+                patched = true;
+            }
+
+            if (patched) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    private static void addItemsAdderSwitchMapFallback(InsnList instructions, String switchMapOwner, String versionFieldName, int switchValue) {
+        instructions.add(new FieldInsnNode(
+                Opcodes.GETSTATIC,
+                switchMapOwner,
+                "PU",
+                "[I"
+        ));
+        instructions.add(new FieldInsnNode(
+                Opcodes.GETSTATIC,
+                "beer/devs/fastnbt/nms/Version",
+                versionFieldName,
+                "Lbeer/devs/fastnbt/nms/Version;"
+        ));
+        instructions.add(new MethodInsnNode(
+                Opcodes.INVOKEVIRTUAL,
+                "beer/devs/fastnbt/nms/Version",
+                "ordinal",
+                "()I",
+                false
+        ));
+        instructions.add(new IntInsnNode(Opcodes.BIPUSH, switchValue));
+        instructions.add(new InsnNode(Opcodes.IASTORE));
+    }
+
+    private static void fixItemsAdderPacketConnectionCompat(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"<clinit>".equals(methodNode.name) || !"()V".equals(methodNode.desc)) {
+                continue;
+            }
+
+            boolean patched = false;
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (!(insn instanceof LdcInsnNode ldcInsnNode)) {
+                    continue;
+                }
+                if (!(ldcInsnNode.cst instanceof Type type)) {
+                    continue;
+                }
+                if (!"net/minecraft/server/network/ServerCommonPacketListenerImpl".equals(type.getInternalName())) {
+                    continue;
+                }
+
+                ldcInsnNode.cst = Type.getObjectType("net/minecraft/server/network/ServerGamePacketListenerImpl");
+                patched = true;
+            }
+
+            if (patched) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    private static void fixItemsAdderLibbyLibraryManager(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"resolveTransitiveLibraries".equals(methodNode.name)
+                    || !"(Lia/sh/com/alessiodp/libby/Library;)V".equals(methodNode.desc)) {
+                continue;
+            }
+
+            InsnList toInject = new InsnList();
+            toInject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            toInject.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "itemsAdderResolveTransitiveLibrariesCompat",
+                    "(Ljava/lang/Object;Ljava/lang/Object;)V",
+                    false
+            ));
+            toInject.add(new InsnNode(Opcodes.RETURN));
+            methodNode.instructions = toInject;
+            methodNode.tryCatchBlocks.clear();
+            methodNode.maxStack = 2;
+            methodNode.maxLocals = 2;
+            clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixItemsAdderLibbyTransitiveDependencyHelper(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if ("<init>".equals(methodNode.name)
+                    && "(Lia/sh/com/alessiodp/libby/LibraryManager;Ljava/nio/file/Path;)V".equals(methodNode.desc)) {
+                InsnList toInject = new InsnList();
+                toInject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESPECIAL,
+                        "java/lang/Object",
+                        "<init>",
+                        "()V",
+                        false
+                ));
+                toInject.add(new InsnNode(Opcodes.RETURN));
+                methodNode.instructions = toInject;
+                methodNode.tryCatchBlocks.clear();
+                methodNode.maxStack = 1;
+                methodNode.maxLocals = 3;
+                clearLocalDebugInfo(methodNode);
+                continue;
+            }
+
+            if ("findTransitiveLibraries".equals(methodNode.name)
+                    && "(Lia/sh/com/alessiodp/libby/Library;)Ljava/util/Collection;".equals(methodNode.desc)) {
+                InsnList toInject = new InsnList();
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESTATIC,
+                        "java/util/Collections",
+                        "emptyList",
+                        "()Ljava/util/List;",
+                        false
+                ));
+                toInject.add(new InsnNode(Opcodes.ARETURN));
+                methodNode.instructions = toInject;
+                methodNode.tryCatchBlocks.clear();
+                methodNode.maxStack = 1;
+                methodNode.maxLocals = 2;
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    public static Object protocolLibCreateChatSerializerGson() {
+        com.google.gson.GsonBuilder gsonBuilder = new com.google.gson.GsonBuilder();
+        gsonBuilder.disableHtmlEscaping();
+        gsonBuilder.registerTypeHierarchyAdapter(net.minecraft.network.chat.Component.class, new net.minecraft.network.chat.Component.Serializer());
+        gsonBuilder.registerTypeHierarchyAdapter(net.minecraft.network.chat.Style.class, new net.minecraft.network.chat.Style.Serializer());
+        gsonBuilder.registerTypeAdapterFactory(new net.minecraft.util.LowerCaseEnumTypeAdapterFactory());
+        return gsonBuilder.create();
+    }
+
+    public static Object protocolLibCreateWrappedChatSerializeAccessor(ClassLoader protocolLibLoader) {
+        try {
+            Method toJson = net.minecraft.network.chat.Component.Serializer.class.getDeclaredMethod(
+                    "toJson",
+                    net.minecraft.network.chat.Component.class
+            );
+            return protocolLibCreateMethodAccessor(protocolLibLoader, toJson);
+        } catch (ReflectiveOperationException ex) {
+            throw new RuntimeException("Failed to create ProtocolLib chat serializer accessor", ex);
+        }
+    }
+
+    public static Object protocolLibCreateCraftChatMessageAccessor(ClassLoader protocolLibLoader) {
+        try {
+            Method fromString = org.bukkit.craftbukkit.v1_20_R1.util.CraftChatMessage.class.getDeclaredMethod(
+                    "fromString",
+                    String.class,
+                    boolean.class
+            );
+            return protocolLibCreateMethodAccessor(protocolLibLoader, fromString);
+        } catch (ReflectiveOperationException ex) {
+            throw new RuntimeException("Failed to create ProtocolLib CraftChatMessage accessor", ex);
+        }
+    }
+
+    private static Object protocolLibCreateMethodAccessor(ClassLoader protocolLibLoader, Method method) throws ReflectiveOperationException {
+        Class<?> accessorsClass = Class.forName(
+                "com.comphenix.protocol.reflect.accessors.Accessors",
+                true,
+                protocolLibLoader
+        );
+        Method accessorFactory = accessorsClass.getDeclaredMethod("getMethodAccessor", Method.class);
+        return accessorFactory.invoke(null, method);
     }
 
     private static void fixCloudCraftBukkitReflectionFindMethod(ClassNode node) {
@@ -2406,6 +2846,67 @@ public class PluginFixManager {
         }
     }
 
+    private static void fixMythicEntityTypeConstants(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            boolean changed = false;
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; ) {
+                AbstractInsnNode next = insn.getNext();
+                if (!(insn instanceof org.objectweb.asm.tree.FieldInsnNode fieldInsnNode)) {
+                    insn = next;
+                    continue;
+                }
+                if (fieldInsnNode.getOpcode() != Opcodes.GETSTATIC
+                        || !"org/bukkit/entity/EntityType".equals(fieldInsnNode.owner)
+                        || !"Lorg/bukkit/entity/EntityType;".equals(fieldInsnNode.desc)) {
+                    insn = next;
+                    continue;
+                }
+                InsnList replacement = new InsnList();
+                replacement.add(new LdcInsnNode(fieldInsnNode.name));
+                replacement.add(new MethodInsnNode(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(PluginFixManager.class),
+                        "resolveEntityTypeCompat",
+                        "(Ljava/lang/String;)Lorg/bukkit/entity/EntityType;",
+                        false
+                ));
+                methodNode.instructions.insertBefore(insn, replacement);
+                methodNode.instructions.remove(insn);
+                changed = true;
+                insn = next;
+            }
+            if (changed) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    private static void fixMythicAttributeApiCompat(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            boolean changed = false;
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (!(insn instanceof MethodInsnNode methodInsnNode)) {
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() != Opcodes.INVOKEINTERFACE
+                        || !"org/bukkit/attribute/Attribute".equals(methodInsnNode.owner)
+                        || !"getKey".equals(methodInsnNode.name)
+                        || !"()Lorg/bukkit/NamespacedKey;".equals(methodInsnNode.desc)) {
+                    continue;
+                }
+                methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                methodInsnNode.name = "attributeGetKeyCompat";
+                methodInsnNode.desc = "(Lorg/bukkit/attribute/Attribute;)Lorg/bukkit/NamespacedKey;";
+                methodInsnNode.itf = false;
+                changed = true;
+            }
+            if (changed) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
     private static void fixMythicBukkitBootstrap(ClassNode node) {
         for (MethodNode methodNode : node.methods) {
             if (!"createBossBar".equals(methodNode.name)) {
@@ -2433,6 +2934,27 @@ public class PluginFixManager {
             toInject.add(new InsnNode(Opcodes.ARETURN));
             methodNode.instructions = toInject;
             methodNode.tryCatchBlocks.clear();
+            clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixMythicBukkitParticleCompat(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"get".equals(methodNode.name)
+                    || !"(Ljava/lang/String;)Lio/lumine/mythic/bukkit/adapters/BukkitParticle;".equals(methodNode.desc)) {
+                continue;
+            }
+            InsnList toInject = new InsnList();
+            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "normalizeMythicParticleNameCompat",
+                    "(Ljava/lang/String;)Ljava/lang/String;",
+                    false
+            ));
+            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ASTORE, 0));
+            methodNode.instructions.insertBefore(methodNode.instructions.getFirst(), toInject);
             clearLocalDebugInfo(methodNode);
         }
     }
@@ -3659,6 +4181,173 @@ public class PluginFixManager {
         }
     }
 
+    private static void fixLampCommodoreProvider(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"checkSupported".equals(methodNode.name)
+                    || !"()Ljava/util/function/Function;".equals(methodNode.desc)) {
+                continue;
+            }
+
+            InsnList toInject = new InsnList();
+            toInject.add(new InsnNode(Opcodes.ACONST_NULL));
+            toInject.add(new InsnNode(ARETURN));
+            methodNode.instructions = toInject;
+            methodNode.tryCatchBlocks.clear();
+            clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixZapperDependencyManager(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if ("<init>".equals(methodNode.name)
+                    && "(Lorg/bukkit/plugin/PluginDescriptionFile;Ljava/io/File;Lrevxrsal/zapper/classloader/URLClassLoaderWrapper;)V".equals(methodNode.desc)) {
+                InsnList toInject = new InsnList();
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESPECIAL,
+                        "java/lang/Object",
+                        "<init>",
+                        "()V",
+                        false
+                ));
+
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new org.objectweb.asm.tree.TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
+                toInject.add(new InsnNode(Opcodes.DUP));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESPECIAL,
+                        "java/util/ArrayList",
+                        "<init>",
+                        "()V",
+                        false
+                ));
+                toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                        Opcodes.PUTFIELD,
+                        node.name,
+                        "dependencies",
+                        "Ljava/util/List;"
+                ));
+
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new org.objectweb.asm.tree.TypeInsnNode(Opcodes.NEW, "java/util/LinkedHashSet"));
+                toInject.add(new InsnNode(Opcodes.DUP));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESPECIAL,
+                        "java/util/LinkedHashSet",
+                        "<init>",
+                        "()V",
+                        false
+                ));
+                toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                        Opcodes.PUTFIELD,
+                        node.name,
+                        "repositories",
+                        "Ljava/util/Set;"
+                ));
+
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new org.objectweb.asm.tree.TypeInsnNode(Opcodes.NEW, "java/util/ArrayList"));
+                toInject.add(new InsnNode(Opcodes.DUP));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESPECIAL,
+                        "java/util/ArrayList",
+                        "<init>",
+                        "()V",
+                        false
+                ));
+                toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                        Opcodes.PUTFIELD,
+                        node.name,
+                        "relocations",
+                        "Ljava/util/List;"
+                ));
+
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 1));
+                toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                        Opcodes.PUTFIELD,
+                        node.name,
+                        "pdf",
+                        "Lorg/bukkit/plugin/PluginDescriptionFile;"
+                ));
+
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 2));
+                toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                        Opcodes.PUTFIELD,
+                        node.name,
+                        "directory",
+                        "Ljava/io/File;"
+                ));
+
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 3));
+                toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                        Opcodes.PUTFIELD,
+                        node.name,
+                        "loaderWrapper",
+                        "Lrevxrsal/zapper/classloader/URLClassLoaderWrapper;"
+                ));
+
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                        Opcodes.GETFIELD,
+                        node.name,
+                        "repositories",
+                        "Ljava/util/Set;"
+                ));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESTATIC,
+                        "revxrsal/zapper/repository/Repository",
+                        "mavenCentral",
+                        "()Lrevxrsal/zapper/repository/Repository;",
+                        true
+                ));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKEINTERFACE,
+                        "java/util/Set",
+                        "add",
+                        "(Ljava/lang/Object;)Z",
+                        true
+                ));
+                toInject.add(new InsnNode(Opcodes.POP));
+
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new InsnNode(Opcodes.ACONST_NULL));
+                toInject.add(new org.objectweb.asm.tree.FieldInsnNode(
+                        Opcodes.PUTFIELD,
+                        node.name,
+                        "helper",
+                        "Lrevxrsal/zapper/TransitiveDependencyHelper;"
+                ));
+
+                toInject.add(new InsnNode(Opcodes.RETURN));
+                methodNode.instructions = toInject;
+                methodNode.tryCatchBlocks.clear();
+                clearLocalDebugInfo(methodNode);
+                continue;
+            }
+
+            if (!"load".equals(methodNode.name) || !"()V".equals(methodNode.desc)) {
+                continue;
+            }
+
+            InsnList toInject = new InsnList();
+            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "loadZapperDependenciesCompat",
+                    "(Ljava/lang/Object;)V",
+                    false
+            ));
+            toInject.add(new InsnNode(Opcodes.RETURN));
+            methodNode.instructions = toInject;
+            methodNode.tryCatchBlocks.clear();
+            clearLocalDebugInfo(methodNode);
+        }
+    }
+
     private static void fixAxiomPaper(ClassNode node) {
         for (MethodNode methodNode : node.methods) {
             if ("hasPermission".equals(methodNode.name)
@@ -4408,6 +5097,48 @@ public class PluginFixManager {
         return resolvePluginByNameCompat("One World Plugin - Mechanics - MythicDungeons");
     }
 
+    public static org.bukkit.NamespacedKey attributeGetKeyCompat(org.bukkit.attribute.Attribute attribute) {
+        return attribute.getKey();
+    }
+
+    public static org.bukkit.block.banner.PatternType patternTypeValueOfCompat(String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("PatternType name cannot be null");
+        }
+
+        try {
+            return org.bukkit.block.banner.PatternType.valueOf(name);
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        try {
+            return org.bukkit.block.banner.PatternType.valueOf(name.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        org.bukkit.block.banner.PatternType patternType =
+                org.bukkit.block.banner.PatternType.getByIdentifier(name.toLowerCase(Locale.ROOT));
+        if (patternType != null) {
+            return patternType;
+        }
+
+        throw new IllegalArgumentException("No enum constant org.bukkit.block.banner.PatternType." + name);
+    }
+
+    public static String normalizeMythicParticleNameCompat(String name) {
+        if (name == null) {
+            return null;
+        }
+
+        return switch (name.toUpperCase(Locale.ROOT)) {
+            case "FIRE" -> "FLAME";
+            case "SNOW_SHOVEL" -> "ITEM_SNOWBALL";
+            case "LARGE_GUST" -> "GUST_EMITTER_LARGE";
+            case "GUST_SMALL" -> "SMALL_GUST";
+            default -> name;
+        };
+    }
+
     private static Object resolvePluginByNameCompat(String name) {
         try {
             return org.bukkit.Bukkit.getPluginManager().getPlugin(name);
@@ -4760,6 +5491,569 @@ public class PluginFixManager {
             field.setAccessible(true);
             field.setBoolean(mythicPlugin, enabled);
         } catch (Throwable ignored) {
+        }
+    }
+
+    public static EntityType resolveEntityTypeCompat(String name) {
+        if (name == null || name.isEmpty()) {
+            return EntityType.UNKNOWN;
+        }
+
+        try {
+            return EntityType.valueOf(name);
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        EntityType byName = EntityType.fromName(name);
+        if (byName != null) {
+            return byName;
+        }
+
+        return switch (name) {
+            case "SNOW_GOLEM" -> EntityType.SNOWMAN;
+            case "BREEZE" -> EntityType.BLAZE;
+            case "BOGGED" -> EntityType.SKELETON;
+            case "ARMADILLO" -> EntityType.RABBIT;
+            case "WIND_CHARGE", "BREEZE_WIND_CHARGE" -> EntityType.SMALL_FIREBALL;
+            default -> EntityType.UNKNOWN;
+        };
+    }
+
+    public static void itemsAdderResolveTransitiveLibrariesCompat(Object libraryManager, Object library) {
+        if (libraryManager == null || library == null) {
+            return;
+        }
+
+        try {
+            String groupId = stringValueCompat(invokeNoArgs(library, "getGroupId"));
+            String artifactId = stringValueCompat(invokeNoArgs(library, "getArtifactId"));
+            String version = stringValueCompat(invokeNoArgs(library, "getVersion"));
+            String classifier = blankToNullCompat(stringValueCompat(invokeNoArgs(library, "getClassifier")));
+            if (groupId == null || artifactId == null || version == null) {
+                return;
+            }
+
+            java.util.Set<String> excludedDependencies = new java.util.HashSet<>();
+            Object excludedObj = invokeNoArgs(library, "getExcludedTransitiveDependencies");
+            if (excludedObj instanceof java.util.Collection<?> excludedCollection) {
+                for (Object excluded : excludedCollection) {
+                    String excludedGroup = stringValueCompat(invokeNoArgs(excluded, "getGroupId"));
+                    String excludedArtifact = stringValueCompat(invokeNoArgs(excluded, "getArtifactId"));
+                    if (excludedGroup != null && excludedArtifact != null) {
+                        excludedDependencies.add(excludedGroup + ":" + excludedArtifact);
+                    }
+                }
+            }
+
+            com.mohistmc.org.eclipse.aether.RepositorySystem repositorySystem = createZapperRepositorySystemCompat();
+            com.mohistmc.org.eclipse.aether.DefaultRepositorySystemSession session =
+                    createZapperRepositorySessionCompat(repositorySystem);
+            java.util.List<com.mohistmc.org.eclipse.aether.repository.RemoteRepository> repositories =
+                    createItemsAdderRemoteRepositoriesCompat(libraryManager, library);
+
+            com.mohistmc.org.eclipse.aether.artifact.Artifact requestedArtifact =
+                    new com.mohistmc.org.eclipse.aether.artifact.DefaultArtifact(
+                            groupId,
+                            artifactId,
+                            classifier == null ? "" : classifier,
+                            "jar",
+                            version
+                    );
+            com.mohistmc.org.eclipse.aether.graph.Dependency requestedDependency =
+                    new com.mohistmc.org.eclipse.aether.graph.Dependency(requestedArtifact, null);
+            com.mohistmc.org.eclipse.aether.collection.CollectRequest collectRequest =
+                    new com.mohistmc.org.eclipse.aether.collection.CollectRequest(
+                            (com.mohistmc.org.eclipse.aether.graph.Dependency) null,
+                            java.util.List.of(requestedDependency),
+                            repositories
+                    );
+            com.mohistmc.org.eclipse.aether.resolution.DependencyResult dependencyResult =
+                    repositorySystem.resolveDependencies(
+                            session,
+                            new com.mohistmc.org.eclipse.aether.resolution.DependencyRequest(collectRequest, null)
+                    );
+
+            Class<?> managerClass = libraryManager.getClass();
+            boolean isolated = booleanValueCompat(invokeNoArgs(library, "isIsolatedLoad"));
+            Method addToClasspath = findMethodCompat(managerClass, "addToClasspath", java.nio.file.Path.class);
+            Method addToIsolatedClasspath = findMethodCompat(managerClass, "addToIsolatedClasspath", library.getClass(), java.nio.file.Path.class);
+            java.util.Set<String> loadedPaths = new java.util.HashSet<>();
+
+            for (com.mohistmc.org.eclipse.aether.resolution.ArtifactResult artifactResult : dependencyResult.getArtifactResults()) {
+                com.mohistmc.org.eclipse.aether.artifact.Artifact artifact = artifactResult.getArtifact();
+                if (artifact == null || artifact.getFile() == null) {
+                    continue;
+                }
+
+                String resolvedGroupId = artifact.getGroupId();
+                String resolvedArtifactId = artifact.getArtifactId();
+                String resolvedVersion = artifact.getBaseVersion() == null || artifact.getBaseVersion().isEmpty()
+                        ? artifact.getVersion()
+                        : artifact.getBaseVersion();
+                String resolvedClassifier = blankToNullCompat(artifact.getClassifier());
+
+                if (groupId.equals(resolvedGroupId)
+                        && artifactId.equals(resolvedArtifactId)
+                        && version.equals(resolvedVersion)
+                        && java.util.Objects.equals(classifier, resolvedClassifier)) {
+                    continue;
+                }
+
+                if (excludedDependencies.contains(resolvedGroupId + ":" + resolvedArtifactId)) {
+                    continue;
+                }
+
+                java.nio.file.Path path = artifact.getFile().toPath().toAbsolutePath().normalize();
+                String normalizedPath = path.toString();
+                if (!loadedPaths.add(normalizedPath)) {
+                    continue;
+                }
+
+                if (isolated && addToIsolatedClasspath != null) {
+                    addToIsolatedClasspath.invoke(libraryManager, library, path);
+                } else if (addToClasspath != null) {
+                    addToClasspath.invoke(libraryManager, path);
+                }
+            }
+        } catch (Throwable throwable) {
+            throw new RuntimeException("Failed to resolve ItemsAdder transitive libraries", throwable);
+        }
+    }
+
+    public static void loadZapperDependenciesCompat(Object dependencyManager) {
+        if (dependencyManager == null) {
+            return;
+        }
+
+        try {
+            Class<?> managerClass = dependencyManager.getClass();
+            java.io.File directory = (java.io.File) readDeclaredFieldCompat(managerClass, dependencyManager, "directory");
+            Object loaderWrapper = readDeclaredFieldCompat(managerClass, dependencyManager, "loaderWrapper");
+            Object pdf = readDeclaredFieldCompat(managerClass, dependencyManager, "pdf");
+            Object dependenciesObj = readDeclaredFieldCompat(managerClass, dependencyManager, "dependencies");
+            Object repositoriesObj = readDeclaredFieldCompat(managerClass, dependencyManager, "repositories");
+            Object relocationsObj = readDeclaredFieldCompat(managerClass, dependencyManager, "relocations");
+
+            if (!(dependenciesObj instanceof java.util.Collection<?> dependencies) || loaderWrapper == null || directory == null) {
+                return;
+            }
+
+            if (!directory.exists() && !directory.mkdirs()) {
+                throw new IllegalStateException("Unable to create Zapper directory " + directory.getAbsolutePath());
+            }
+
+            java.util.Collection<?> repositories =
+                    repositoriesObj instanceof java.util.Collection<?> collection ? collection : java.util.List.of();
+            java.util.List<?> relocations =
+                    relocationsObj instanceof java.util.List<?> list ? list : java.util.List.of();
+
+            ClassLoader pluginClassLoader = managerClass.getClassLoader();
+            java.util.LinkedHashMap<String, ZapperResolvedArtifact> resolvedArtifacts = new java.util.LinkedHashMap<>();
+            for (Object dependency : dependencies) {
+                resolveZapperArtifactsCompat(dependency, repositories, resolvedArtifacts);
+            }
+
+            Method addUrlMethod = findMethodCompat(loaderWrapper.getClass(), "addURL", java.net.URL.class, boolean.class);
+            Method flushMethod = findMethodCompat(loaderWrapper.getClass(), "flush");
+            if (addUrlMethod == null || flushMethod == null) {
+                throw new IllegalStateException("Unable to access Zapper class loader wrapper");
+            }
+
+            for (ZapperResolvedArtifact artifact : resolvedArtifacts.values()) {
+                if (artifact.file == null || !artifact.file.isFile()) {
+                    continue;
+                }
+
+                java.io.File libraryFile = zapperLibraryFileCompat(
+                        directory,
+                        artifact.groupId,
+                        artifact.artifactId,
+                        artifact.version,
+                        artifact.classifier,
+                        false
+                );
+                copyResolvedArtifactCompat(artifact.file, libraryFile);
+
+                java.io.File loadFile = libraryFile;
+                if (!relocations.isEmpty()) {
+                    java.io.File relocatedFile = zapperLibraryFileCompat(
+                            directory,
+                            artifact.groupId,
+                            artifact.artifactId,
+                            artifact.version,
+                            artifact.classifier,
+                            true
+                    );
+                    relocateZapperArtifactCompat(pluginClassLoader, libraryFile, relocatedFile, relocations);
+                    loadFile = relocatedFile;
+                }
+
+                loadFile = remapZapperArtifactCompat(pluginClassLoader, pdf, loadFile, artifact.remap);
+                addUrlMethod.invoke(loaderWrapper, loadFile.toURI().toURL(), artifact.remap);
+            }
+
+            flushMethod.invoke(loaderWrapper);
+        } catch (Throwable throwable) {
+            throw new RuntimeException("Failed to load Zapper libraries", throwable);
+        }
+    }
+
+    private static void resolveZapperArtifactsCompat(
+            Object dependency,
+            java.util.Collection<?> repositoryObjects,
+            java.util.Map<String, ZapperResolvedArtifact> resolvedArtifacts
+    ) throws Exception {
+        String groupId = stringValueCompat(invokeNoArgs(dependency, "getGroupId"));
+        String artifactId = stringValueCompat(invokeNoArgs(dependency, "getArtifactId"));
+        String version = stringValueCompat(invokeNoArgs(dependency, "getVersion"));
+        String classifier = blankToNullCompat(stringValueCompat(invokeNoArgs(dependency, "getClassifier")));
+        boolean remap = booleanValueCompat(invokeNoArgs(dependency, "isRemap"));
+
+        if (groupId == null || artifactId == null || version == null) {
+            return;
+        }
+
+        com.mohistmc.org.eclipse.aether.RepositorySystem repositorySystem = createZapperRepositorySystemCompat();
+        com.mohistmc.org.eclipse.aether.DefaultRepositorySystemSession session =
+                createZapperRepositorySessionCompat(repositorySystem);
+        java.util.List<com.mohistmc.org.eclipse.aether.repository.RemoteRepository> repositories =
+                createZapperRemoteRepositoriesCompat(repositoryObjects);
+
+        com.mohistmc.org.eclipse.aether.artifact.Artifact requestedArtifact =
+                new com.mohistmc.org.eclipse.aether.artifact.DefaultArtifact(
+                        groupId,
+                        artifactId,
+                        classifier == null ? "" : classifier,
+                        "jar",
+                        version
+                );
+        com.mohistmc.org.eclipse.aether.graph.Dependency requestedDependency =
+                new com.mohistmc.org.eclipse.aether.graph.Dependency(requestedArtifact, null);
+        com.mohistmc.org.eclipse.aether.collection.CollectRequest collectRequest =
+                new com.mohistmc.org.eclipse.aether.collection.CollectRequest(
+                        (com.mohistmc.org.eclipse.aether.graph.Dependency) null,
+                        java.util.List.of(requestedDependency),
+                        repositories
+                );
+        com.mohistmc.org.eclipse.aether.resolution.DependencyResult dependencyResult =
+                repositorySystem.resolveDependencies(
+                        session,
+                        new com.mohistmc.org.eclipse.aether.resolution.DependencyRequest(collectRequest, null)
+                );
+
+        for (com.mohistmc.org.eclipse.aether.resolution.ArtifactResult artifactResult : dependencyResult.getArtifactResults()) {
+            com.mohistmc.org.eclipse.aether.artifact.Artifact artifact = artifactResult.getArtifact();
+            if (artifact == null || artifact.getFile() == null) {
+                continue;
+            }
+
+            String resolvedGroupId = artifact.getGroupId();
+            String resolvedArtifactId = artifact.getArtifactId();
+            String resolvedVersion = artifact.getBaseVersion() == null || artifact.getBaseVersion().isEmpty()
+                    ? artifact.getVersion()
+                    : artifact.getBaseVersion();
+            String resolvedClassifier = blankToNullCompat(artifact.getClassifier());
+            boolean artifactRemap = remap
+                    && groupId.equals(resolvedGroupId)
+                    && artifactId.equals(resolvedArtifactId)
+                    && version.equals(resolvedVersion)
+                    && java.util.Objects.equals(classifier, resolvedClassifier);
+
+            String key = resolvedGroupId + ":" + resolvedArtifactId + ":" + resolvedVersion + ":" + resolvedClassifier;
+            ZapperResolvedArtifact existing = resolvedArtifacts.get(key);
+            if (existing == null || (!existing.remap && artifactRemap)) {
+                resolvedArtifacts.put(
+                        key,
+                        new ZapperResolvedArtifact(
+                                resolvedGroupId,
+                                resolvedArtifactId,
+                                resolvedVersion,
+                                resolvedClassifier,
+                                artifact.getFile(),
+                                artifactRemap
+                        )
+                );
+            }
+        }
+    }
+
+    private static com.mohistmc.org.eclipse.aether.RepositorySystem createZapperRepositorySystemCompat() {
+        com.mohistmc.org.eclipse.aether.impl.DefaultServiceLocator locator =
+                com.mohistmc.org.apache.maven.repository.internal.MavenRepositorySystemUtils.newServiceLocator();
+        locator.addService(
+                com.mohistmc.org.eclipse.aether.spi.connector.RepositoryConnectorFactory.class,
+                com.mohistmc.org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory.class
+        );
+        locator.addService(
+                com.mohistmc.org.eclipse.aether.spi.connector.transport.TransporterFactory.class,
+                com.mohistmc.org.eclipse.aether.transport.http.HttpTransporterFactory.class
+        );
+        return locator.getService(com.mohistmc.org.eclipse.aether.RepositorySystem.class);
+    }
+
+    private static com.mohistmc.org.eclipse.aether.DefaultRepositorySystemSession createZapperRepositorySessionCompat(
+            com.mohistmc.org.eclipse.aether.RepositorySystem repositorySystem
+    ) {
+        com.mohistmc.org.eclipse.aether.DefaultRepositorySystemSession session =
+                com.mohistmc.org.apache.maven.repository.internal.MavenRepositorySystemUtils.newSession();
+        session.setChecksumPolicy(com.mohistmc.org.eclipse.aether.repository.RepositoryPolicy.CHECKSUM_POLICY_WARN);
+        session.setLocalRepositoryManager(
+                repositorySystem.newLocalRepositoryManager(
+                        session,
+                        new com.mohistmc.org.eclipse.aether.repository.LocalRepository("libraries")
+                )
+        );
+        return session;
+    }
+
+    private static java.util.List<com.mohistmc.org.eclipse.aether.repository.RemoteRepository> createZapperRemoteRepositoriesCompat(
+            java.util.Collection<?> repositoryObjects
+    ) {
+        java.util.LinkedHashMap<String, com.mohistmc.org.eclipse.aether.repository.RemoteRepository> repositories =
+                new java.util.LinkedHashMap<>();
+
+        if (repositoryObjects != null) {
+            for (Object repositoryObject : repositoryObjects) {
+                String url = zapperRepositoryUrlCompat(repositoryObject);
+                if (url == null || url.isEmpty()) {
+                    continue;
+                }
+
+                repositories.computeIfAbsent(
+                        url,
+                        ignored -> new com.mohistmc.org.eclipse.aether.repository.RemoteRepository.Builder(
+                                "oneworld-zapper-" + repositories.size(),
+                                "default",
+                                url
+                        ).build()
+                );
+            }
+        }
+
+        if (repositories.isEmpty()) {
+            String central = com.oneworldstudiomc.bukkit.PluginsLibrarySource.DEFAULT;
+            repositories.put(
+                    central,
+                    new com.mohistmc.org.eclipse.aether.repository.RemoteRepository.Builder(
+                            "oneworld-zapper-central",
+                            "default",
+                            central
+                    ).build()
+            );
+        }
+
+        return new java.util.ArrayList<>(repositories.values());
+    }
+
+    private static java.util.List<com.mohistmc.org.eclipse.aether.repository.RemoteRepository> createItemsAdderRemoteRepositoriesCompat(
+            Object libraryManager,
+            Object library
+    ) throws IllegalAccessException {
+        java.util.LinkedHashMap<String, com.mohistmc.org.eclipse.aether.repository.RemoteRepository> repositories =
+                new java.util.LinkedHashMap<>();
+
+        addItemsAdderRepositoryUrlCompat(repositories, com.oneworldstudiomc.bukkit.PluginsLibrarySource.DEFAULT);
+        addItemsAdderRepositoriesCompat(repositories, invokeNoArgs(library, "getRepositories"));
+        addItemsAdderRepositoriesCompat(repositories, invokeNoArgs(library, "getFallbackRepositories"));
+        addItemsAdderRepositoriesCompat(
+                repositories,
+                readDeclaredFieldCompat(libraryManager.getClass(), libraryManager, "repositories")
+        );
+
+        return new java.util.ArrayList<>(repositories.values());
+    }
+
+    private static void addItemsAdderRepositoriesCompat(
+            java.util.Map<String, com.mohistmc.org.eclipse.aether.repository.RemoteRepository> repositories,
+            Object repositoryValues
+    ) {
+        if (!(repositoryValues instanceof java.util.Collection<?> collection)) {
+            return;
+        }
+
+        for (Object repositoryValue : collection) {
+            String url = stringValueCompat(repositoryValue);
+            if ((url == null || url.isBlank()) && repositoryValue != null) {
+                url = repositoryValue.toString();
+            }
+            addItemsAdderRepositoryUrlCompat(repositories, url);
+        }
+    }
+
+    private static void addItemsAdderRepositoryUrlCompat(
+            java.util.Map<String, com.mohistmc.org.eclipse.aether.repository.RemoteRepository> repositories,
+            String url
+    ) {
+        if (url == null || url.isBlank()) {
+            return;
+        }
+
+        String normalizedUrl = ensureTrailingSlashCompat(url);
+        repositories.computeIfAbsent(
+                normalizedUrl,
+                ignored -> new com.mohistmc.org.eclipse.aether.repository.RemoteRepository.Builder(
+                        "oneworld-itemsadder-" + repositories.size(),
+                        "default",
+                        normalizedUrl
+                ).build()
+        );
+    }
+
+    private static String zapperRepositoryUrlCompat(Object repositoryObject) {
+        if (repositoryObject == null) {
+            return null;
+        }
+
+        try {
+            Method method = findMethodCompat(repositoryObject.getClass(), "getRepositoryURL");
+            Object value = method == null ? null : method.invoke(repositoryObject);
+            if (value instanceof String url && !url.isEmpty()) {
+                return ensureTrailingSlashCompat(url);
+            }
+        } catch (Throwable ignored) {
+        }
+
+        String fallback = repositoryObject.toString();
+        return fallback == null || fallback.isEmpty() ? null : ensureTrailingSlashCompat(fallback);
+    }
+
+    private static java.io.File zapperLibraryFileCompat(
+            java.io.File directory,
+            String groupId,
+            String artifactId,
+            String version,
+            String classifier,
+            boolean relocated
+    ) {
+        StringBuilder fileName = new StringBuilder();
+        fileName.append(groupId).append('.').append(artifactId).append('-').append(version);
+        if (classifier != null && !classifier.isBlank()) {
+            fileName.append('-').append(classifier);
+        }
+        if (relocated) {
+            fileName.append("-relocated");
+        }
+        fileName.append(".jar");
+        return new java.io.File(directory, fileName.toString());
+    }
+
+    private static void copyResolvedArtifactCompat(java.io.File sourceFile, java.io.File targetFile) throws java.io.IOException {
+        java.io.File parent = targetFile.getParentFile();
+        if (parent != null && !parent.exists()) {
+            parent.mkdirs();
+        }
+
+        if (targetFile.isFile()
+                && targetFile.length() == sourceFile.length()
+                && isValidJarFileCompat(targetFile)) {
+            return;
+        }
+
+        java.nio.file.Files.copy(
+                sourceFile.toPath(),
+                targetFile.toPath(),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING
+        );
+    }
+
+    private static void relocateZapperArtifactCompat(
+            ClassLoader pluginClassLoader,
+            java.io.File sourceFile,
+            java.io.File relocatedFile,
+            java.util.List<?> relocations
+    ) throws Exception {
+        if (relocatedFile.isFile()
+                && relocatedFile.length() > 0
+                && relocatedFile.lastModified() >= sourceFile.lastModified()
+                && isValidJarFileCompat(relocatedFile)) {
+            return;
+        }
+
+        Class<?> relocatorClass = Class.forName("revxrsal.zapper.relocation.Relocator", true, pluginClassLoader);
+        Method relocateMethod = relocatorClass.getMethod("relocate", java.io.File.class, java.io.File.class, java.util.List.class);
+        relocateMethod.invoke(null, sourceFile, relocatedFile, relocations);
+    }
+
+    private static java.io.File remapZapperArtifactCompat(
+            ClassLoader pluginClassLoader,
+            Object pluginDescription,
+            java.io.File file,
+            boolean remap
+    ) {
+        if (!remap || file == null) {
+            return file;
+        }
+
+        try {
+            Class<?> remapperClass = Class.forName("revxrsal.zapper.remapper.PaperLibraryRemapper", true, pluginClassLoader);
+            Method remapMethod = remapperClass.getMethod(
+                    "tryRemap",
+                    org.bukkit.plugin.PluginDescriptionFile.class,
+                    java.io.File.class,
+                    boolean.class
+            );
+            Object remapped = remapMethod.invoke(null, pluginDescription, file, true);
+            return remapped instanceof java.io.File remappedFile ? remappedFile : file;
+        } catch (Throwable ignored) {
+            return file;
+        }
+    }
+
+    private static boolean isValidJarFileCompat(java.io.File file) {
+        try (java.util.jar.JarFile ignored = new java.util.jar.JarFile(file)) {
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static Object readDeclaredFieldCompat(Class<?> owner, Object instance, String name) throws IllegalAccessException {
+        Field field = findFieldByNameCompat(owner, name);
+        if (field == null) {
+            return null;
+        }
+        field.setAccessible(true);
+        return field.get(instance);
+    }
+
+    private static String stringValueCompat(Object value) {
+        return value instanceof String string ? string : null;
+    }
+
+    private static boolean booleanValueCompat(Object value) {
+        return value instanceof Boolean bool && bool;
+    }
+
+    private static String blankToNullCompat(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    private static String ensureTrailingSlashCompat(String value) {
+        return value.endsWith("/") ? value : value + "/";
+    }
+
+    private static final class ZapperResolvedArtifact {
+        private final String groupId;
+        private final String artifactId;
+        private final String version;
+        private final String classifier;
+        private final java.io.File file;
+        private final boolean remap;
+
+        private ZapperResolvedArtifact(
+                String groupId,
+                String artifactId,
+                String version,
+                String classifier,
+                java.io.File file,
+                boolean remap
+        ) {
+            this.groupId = groupId;
+            this.artifactId = artifactId;
+            this.version = version;
+            this.classifier = classifier;
+            this.file = file;
+            this.remap = remap;
         }
     }
 

@@ -5,5 +5,9 @@ package com.oneworldstudiomc.paper.plugin.configuration;
  */
 public interface PluginMeta {
 
+    String getName();
+
+    String getVersion();
+
     boolean isFoliaSupported();
 }

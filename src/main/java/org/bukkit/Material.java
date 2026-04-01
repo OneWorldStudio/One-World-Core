@@ -4390,6 +4390,9 @@ public enum Material implements Keyed, Translatable, net.kyori.adventure.transla
 
     @Deprecated
     public static final String LEGACY_PREFIX = "LEGACY_";
+    // Paper/newer Bukkit compatibility alias on 1.20.1.
+    public static final Material SHORT_GRASS = GRASS;
+    public static final Material CRAFTER = CRAFTING_TABLE;
 
     private final int id;
     private final Constructor<? extends MaterialData> ctor;
@@ -5796,6 +5799,7 @@ public enum Material implements Keyed, Translatable, net.kyori.adventure.transla
             filtered = filtered.substring((NamespacedKey.MINECRAFT + ":").length());
         }
 
+        filtered = filtered.replace(':', '_');
         filtered = filtered.toUpperCase(java.util.Locale.ENGLISH);
 
         filtered = filtered.replaceAll("\\s+", "_").replaceAll("\\W", "");

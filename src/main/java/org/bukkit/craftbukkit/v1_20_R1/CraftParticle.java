@@ -159,6 +159,11 @@ public enum CraftParticle {
 
 
     public static void putParticles(Particle p, ResourceLocation r) {
+        Particle existing = particles.inverse().get(r);
+        if (existing != null) {
+            aliases.put(p, existing);
+            return;
+        }
         particles.put(p, r);
     }
 

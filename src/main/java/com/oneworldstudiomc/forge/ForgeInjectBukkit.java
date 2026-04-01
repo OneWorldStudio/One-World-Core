@@ -105,6 +105,7 @@ public class ForgeInjectBukkit {
         addEnumVillagerProfession();
         addEnumArt();
         addEnumParticle();
+        addCompatParticleAliases();
         addStatistic();
         addEnumEnvironment();
         loadSpawnCategory();
@@ -216,6 +217,30 @@ public class ForgeInjectBukkit {
                     OneWorldCore.LOGGER.debug("Save-ParticleType:" + name + " - " + particle.name());
                 }
             }
+        }
+    }
+
+    private static void addCompatParticleAliases() {
+        addCompatParticleAlias("POOF", new ResourceLocation("poof"));
+        addCompatParticleAlias("TOTEM_OF_UNDYING", new ResourceLocation("totem_of_undying"));
+        addCompatParticleAlias("WHITE_SMOKE", new ResourceLocation("large_smoke"));
+        addCompatParticleAlias("DUST_PLUME", new ResourceLocation("cloud"));
+        addCompatParticleAlias("GUST", new ResourceLocation("cloud"));
+        addCompatParticleAlias("GUST_EMITTER_SMALL", new ResourceLocation("cloud"));
+        addCompatParticleAlias("GUST_EMITTER_LARGE", new ResourceLocation("cloud"));
+        addCompatParticleAlias("SMALL_GUST", new ResourceLocation("cloud"));
+    }
+
+    private static void addCompatParticleAlias(String name, ResourceLocation resourceLocation) {
+        Particle particle;
+        try {
+            particle = Particle.valueOf(name);
+        } catch (IllegalArgumentException ignored) {
+            particle = MohistDynamEnum.addEnum(Particle.class, name);
+        }
+        if (particle != null) {
+            org.bukkit.craftbukkit.v1_20_R1.CraftParticle.putParticles(particle, resourceLocation);
+            OneWorldCore.LOGGER.debug("Save-CompatParticle:" + name + " - " + resourceLocation);
         }
     }
 
@@ -392,4 +417,3 @@ public class ForgeInjectBukkit {
         return !namespacedkey.getNamespace().equals(NamespacedKey.MINECRAFT);
     }
 }
-

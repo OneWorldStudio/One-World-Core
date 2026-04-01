@@ -427,12 +427,26 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
     }
 
     @Override
+    public Entity spawnEntity(Location location, EntityType entityType, CreatureSpawnEvent.SpawnReason reason) {
+        return spawnEntity(location, entityType, true, reason);
+    }
+
+    @Override
     public Entity spawnEntity(Location loc, EntityType type, boolean randomizeData) {
         Function<Location, ? extends net.minecraft.world.entity.Entity> function = type.getFactory();
         if (function != null) {
             return addEntity(function.apply(loc), CreatureSpawnEvent.SpawnReason.CUSTOM, null, randomizeData);
         }
         return spawn(loc, type.getEntityClass(), null, CreatureSpawnEvent.SpawnReason.CUSTOM, randomizeData);
+    }
+
+    @Override
+    public Entity spawnEntity(Location loc, EntityType type, boolean randomizeData, CreatureSpawnEvent.SpawnReason reason) {
+        Function<Location, ? extends net.minecraft.world.entity.Entity> function = type.getFactory();
+        if (function != null) {
+            return addEntity(function.apply(loc), reason, null, randomizeData);
+        }
+        return spawn(loc, type, type.getEntityClass(), null, reason, randomizeData);
     }
 
     @Override
@@ -534,6 +548,10 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
         return addEntity(entity, CreatureSpawnEvent.SpawnReason.CUSTOM, function, true);
     }
 
+    public <T extends Entity> T spawn(Location location, EntityType entityType, Class<T> clazz, Consumer<T> function, CreatureSpawnEvent.SpawnReason reason) throws IllegalArgumentException {
+        return spawn(location, entityType, clazz, function, reason, true);
+    }
+
     @Override
     public <T extends Entity> T spawn(Location location, Class<T> clazz, boolean randomizeData, Consumer<T> function) throws IllegalArgumentException {
         return spawn(location, clazz, function, CreatureSpawnEvent.SpawnReason.CUSTOM, randomizeData);
@@ -541,6 +559,12 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
 
     public <T extends Entity> T spawn(Location location, Class<T> clazz, Consumer<T> function, CreatureSpawnEvent.SpawnReason reason) throws IllegalArgumentException {
         return spawn(location, clazz, function, reason, true);
+    }
+
+    public <T extends Entity> T spawn(Location location, EntityType entityType, Class<T> clazz, Consumer<T> function, CreatureSpawnEvent.SpawnReason reason, boolean randomizeData) throws IllegalArgumentException {
+        net.minecraft.world.entity.Entity entity = createEntity(location, entityType, clazz, randomizeData);
+
+        return addEntity(entity, reason, function, randomizeData);
     }
 
     public <T extends Entity> T spawn(Location location, Class<T> clazz, Consumer<T> function, CreatureSpawnEvent.SpawnReason reason, boolean randomizeData) throws IllegalArgumentException {

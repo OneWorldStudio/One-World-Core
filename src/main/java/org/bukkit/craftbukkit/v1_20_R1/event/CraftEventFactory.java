@@ -23,6 +23,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -271,6 +272,27 @@ public class CraftEventFactory {
     public static <T extends Event> T callEvent(T event) {
         Bukkit.getServer().getPluginManager().callEvent(event);
         return event;
+    }
+
+    private static boolean isCriticalDamageEvent(Entity damager, Entity damagee, DamageCause cause) {
+        if (cause != DamageCause.ENTITY_ATTACK || !(damager instanceof net.minecraft.world.entity.player.Player player) || !(damagee instanceof LivingEntity)) {
+            return false;
+        }
+
+        float attackStrengthScale = player.getAttackStrengthScale(0.5F);
+        boolean critical = attackStrengthScale > 0.9F
+            && player.fallDistance > 0.0F
+            && !player.onGround()
+            && !player.onClimbable()
+            && !player.isInWater()
+            && !player.hasEffect(MobEffects.BLINDNESS)
+            && !player.isPassenger()
+            && !player.isSprinting();
+        return net.minecraftforge.common.ForgeHooks.getCriticalHit(player, damagee, critical, critical ? 1.5F : 1.0F) != null;
+    }
+
+    private static EntityDamageByEntityEvent createEntityDamageByEntityEvent(Entity damager, Entity damagee, DamageCause cause, Map<DamageModifier, Double> modifiers, Map<DamageModifier, Function<? super Double, Double>> modifierFunctions) {
+        return new EntityDamageByEntityEvent(damager.getBukkitEntity(), damagee.getBukkitEntity(), cause, modifiers, modifierFunctions, isCriticalDamageEvent(damager, damagee, cause));
     }
 
     /**
@@ -935,7 +957,7 @@ public class CraftEventFactory {
                 } else {
                     damageCause = DamageCause.ENTITY_EXPLOSION;
                 }
-                event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), entity.getBukkitEntity(), damageCause, modifiers, modifierFunctions);
+                event = createEntityDamageByEntityEvent(damager, entity, damageCause, modifiers, modifierFunctions);
             }
             event.setCancelled(cancelled);
 
@@ -1017,7 +1039,8 @@ public class CraftEventFactory {
             return event;
         } else if (entityDamage != null) {
             DamageCause cause = null;
-            CraftEntity damager = entityDamage.getBukkitEntity();
+            Entity nmsDamager = entityDamage;
+            CraftEntity damager = nmsDamager.getBukkitEntity();
             entityDamage = null;
             if (source.is(DamageTypes.FALLING_STALACTITE) || source.is(DamageTypes.FALLING_BLOCK) || source.is(DamageTypes.FALLING_ANVIL)) {
                 cause = DamageCause.FALLING_BLOCK;
@@ -1032,7 +1055,7 @@ public class CraftEventFactory {
             } else {
                 cause = DamageCause.CUSTOM;
             }
-            EntityDamageEvent event = new EntityDamageByEntityEvent(damager, entity.getBukkitEntity(), cause, modifiers, modifierFunctions);
+            EntityDamageEvent event = createEntityDamageByEntityEvent(nmsDamager, entity, cause, modifiers, modifierFunctions);
             event.setCancelled(cancelled);
             callEvent(event);
             if (!event.isCancelled()) {
@@ -1094,7 +1117,7 @@ public class CraftEventFactory {
     private static EntityDamageEvent callEntityDamageEvent(Entity damager, Entity damagee, DamageCause cause, Map<DamageModifier, Double> modifiers, Map<DamageModifier, Function<? super Double, Double>> modifierFunctions, boolean cancelled) {
         EntityDamageEvent event;
         if (damager != null) {
-            event = new EntityDamageByEntityEvent(damager.getBukkitEntity(), damagee.getBukkitEntity(), cause, modifiers, modifierFunctions);
+            event = createEntityDamageByEntityEvent(damager, damagee, cause, modifiers, modifierFunctions);
         } else {
             event = new EntityDamageEvent(damagee.getBukkitEntity(), cause, modifiers, modifierFunctions);
         }
@@ -1906,4 +1929,3 @@ public class CraftEventFactory {
         return event;
     }
 }
-

@@ -31,17 +31,31 @@ import com.mohistmc.tools.ZipUtil;
 import com.oneworldstudiomc.util.DataParser;
 import com.oneworldstudiomc.util.MohistModuleManager;
 import cpw.mods.bootstraplauncher.BootstrapLauncher;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
+import java.lang.module.ModuleFinder;
+import java.lang.module.ModuleReference;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.stream.Stream;
 
 public class OneWorldCoreStart {
+    private static final String LEGACY_CLASS_PATH_PREFIX = "-DlegacyClassPath=";
+    private static final Set<String> FILTERED_LEGACY_MODULES = Set.of("org.yaml.snakeyaml");
 
     private static final String ANSI_RESET = "\u001B[0m";
     private static final Map<Character, String[]> LOGO_GLYPHS = Map.of(
@@ -71,6 +85,7 @@ public class OneWorldCoreStart {
         jarTool = new JarTool(OneWorldCoreStart.class);
         DataParser.parseVersions();
         DataParser.parseLaunchArgs();
+        sanitizeLaunchArgs();
         OneWorldCoreConfigUtil.init();
         OneWorldCoreConfigUtil.i18n();
         if (i18n.isCN()) {
@@ -138,6 +153,140 @@ public class OneWorldCoreStart {
         }
         String[] args_ = Stream.concat(forgeArgs.stream(), mainArgs.stream()).toArray(String[]::new);
         BootstrapLauncher.main(args_);
+    }
+
+    private static void sanitizeLaunchArgs() {
+        sanitizeLegacyClasspathModules();
+    }
+
+    private static void sanitizeLegacyClasspathModules() {
+        int legacyClasspathIndex = -1;
+        for (int i = 0; i < DataParser.launchArgs.size(); i++) {
+            if (DataParser.launchArgs.get(i).startsWith(LEGACY_CLASS_PATH_PREFIX)) {
+                legacyClasspathIndex = i;
+                break;
+            }
+        }
+
+        if (legacyClasspathIndex < 0) {
+            return;
+        }
+
+        Set<String> extractedModules = new HashSet<>();
+        Path extractedLibsDir = Path.of("libs");
+        if (Files.isDirectory(extractedLibsDir)) {
+            extractedModules.addAll(findMatchingModulesInDirectory(extractedLibsDir, FILTERED_LEGACY_MODULES));
+        }
+        Path modsDir = Path.of("mods");
+        if (Files.isDirectory(modsDir)) {
+            extractedModules.addAll(findMatchingEmbeddedModulesInMods(modsDir, FILTERED_LEGACY_MODULES));
+        }
+        if (extractedModules.isEmpty()) {
+            return;
+        }
+
+        String legacyClasspath = DataParser.launchArgs.get(legacyClasspathIndex).substring(LEGACY_CLASS_PATH_PREFIX.length());
+        List<String> sanitizedEntries = new ArrayList<>();
+        List<String> removedEntries = new ArrayList<>();
+
+        for (String entry : legacyClasspath.split(java.util.regex.Pattern.quote(File.pathSeparator))) {
+            String trimmedEntry = entry.trim();
+            if (trimmedEntry.isEmpty()) {
+                continue;
+            }
+
+            Path entryPath = Path.of(trimmedEntry);
+            String moduleName = findModuleName(entryPath).orElse(null);
+            if (moduleName != null && extractedModules.contains(moduleName)) {
+                removedEntries.add(trimmedEntry);
+                continue;
+            }
+
+            sanitizedEntries.add(trimmedEntry);
+        }
+
+        if (removedEntries.isEmpty()) {
+            return;
+        }
+
+        DataParser.launchArgs.set(legacyClasspathIndex, LEGACY_CLASS_PATH_PREFIX + String.join(File.pathSeparator, sanitizedEntries));
+        System.out.println("Filtered duplicate legacy modules: " + String.join(", ", extractedModules));
+    }
+
+    private static Set<String> findMatchingModulesInDirectory(Path root, Set<String> moduleNames) {
+        Set<String> matches = new HashSet<>();
+        try (Stream<Path> paths = Files.walk(root)) {
+            paths.filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".jar"))
+                    .map(OneWorldCoreStart::findModuleName)
+                    .flatMap(Optional::stream)
+                    .filter(moduleNames::contains)
+                    .forEach(matches::add);
+        } catch (IOException ignored) {
+        }
+        return matches;
+    }
+
+    private static Set<String> findMatchingEmbeddedModulesInMods(Path modsDir, Set<String> moduleNames) {
+        Set<String> matches = new HashSet<>();
+        try (Stream<Path> paths = Files.walk(modsDir)) {
+            paths.filter(Files::isRegularFile)
+                    .filter(path -> path.toString().endsWith(".jar"))
+                    .forEach(path -> inspectEmbeddedModules(path, moduleNames, matches));
+        } catch (IOException ignored) {
+        }
+        return matches;
+    }
+
+    private static void inspectEmbeddedModules(Path jarPath, Set<String> moduleNames, Set<String> matches) {
+        try (ZipFile zipFile = new ZipFile(jarPath.toFile())) {
+            var entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                if (entry.isDirectory() || !entry.getName().endsWith(".jar")) {
+                    continue;
+                }
+
+                Optional<String> moduleName = findEmbeddedModuleName(zipFile, entry);
+                moduleName.filter(moduleNames::contains).ifPresent(matches::add);
+            }
+        } catch (IOException ignored) {
+        }
+    }
+
+    private static Optional<String> findEmbeddedModuleName(ZipFile zipFile, ZipEntry entry) {
+        Path tempFile = null;
+        try (InputStream inputStream = zipFile.getInputStream(entry)) {
+            tempFile = Files.createTempFile("owc-module-", ".jar");
+            Files.copy(inputStream, tempFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return findModuleName(tempFile);
+        } catch (IOException ignored) {
+            return Optional.empty();
+        } finally {
+            if (tempFile != null) {
+                try {
+                    Files.deleteIfExists(tempFile);
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
+    private static Optional<String> findModuleName(Path path) {
+        if (!Files.isRegularFile(path)) {
+            return Optional.empty();
+        }
+
+        try {
+            return ModuleFinder.of(path.toAbsolutePath().normalize())
+                    .findAll()
+                    .stream()
+                    .map(ModuleReference::descriptor)
+                    .map(descriptor -> descriptor.name())
+                    .findFirst();
+        } catch (RuntimeException ignored) {
+            return Optional.empty();
+        }
     }
 
     private static String buildStartupBanner() {
@@ -258,4 +407,3 @@ public class OneWorldCoreStart {
         }
     }
 }
-

@@ -1,0 +1,7 @@
+name: Parties
+description: Party manager for Minecraft servers
+author: AlessioDP
+website: https://alessiodp.com/parties
+version: 3.2.17
+main: com.alessiodp.parties.bungeecord.bootstrap.BungeePartiesBootstrap
+softDepends: [LastLoginAPI, LuckPerms, RedisBungee]

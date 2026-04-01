@@ -5,6 +5,7 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -46,6 +47,10 @@ public final class PluginCommand extends Command implements PluginIdentifiableCo
             success = executor.onCommand(sender, this, commandLabel, args);
         } catch (Throwable ex) {
             throw new CommandException("Unhandled exception executing command '" + commandLabel + "' in plugin " + owningPlugin.getDescription().getFullName(), ex);
+        }
+
+        if (!success) {
+            success = tryItemsAdderIazipFallback(sender, commandLabel, args);
         }
 
         if (!success && usageMessage.length() > 0) {
@@ -107,6 +112,32 @@ public final class PluginCommand extends Command implements PluginIdentifiableCo
     @NotNull
     public Plugin getPlugin() {
         return owningPlugin;
+    }
+
+    private boolean tryItemsAdderIazipFallback(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
+        if (!"ItemsAdder".equalsIgnoreCase(owningPlugin.getDescription().getName())) {
+            return false;
+        }
+        if (!"iazip".equalsIgnoreCase(this.getName()) && !"iazip".equalsIgnoreCase(commandLabel) && !"iaz".equalsIgnoreCase(commandLabel)) {
+            return false;
+        }
+
+        try {
+            ClassLoader classLoader = owningPlugin.getClass().getClassLoader();
+            Class<?> handlerClass = Class.forName("itemsadder.m.wy", true, classLoader);
+            try {
+                Object handler = handlerClass.getConstructor().newInstance();
+                Method onCommand = handlerClass.getMethod("onCommand", CommandSender.class, Command.class, String.class, String[].class);
+                Object result = onCommand.invoke(handler, sender, this, commandLabel, args);
+                return !(result instanceof Boolean) || (Boolean) result;
+            } catch (ReflectiveOperationException ignored) {
+                Method handler = handlerClass.getMethod("a", CommandSender.class, String[].class);
+                handler.invoke(null, sender, args);
+                return true;
+            }
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            return false;
+        }
     }
 
     /**

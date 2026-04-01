@@ -242,11 +242,7 @@ public abstract class Mob extends LivingEntity implements Targeting {
    }
 
    public void setTarget(@Nullable LivingEntity p_21544_) {
-      if (getTarget() == p_21544_) return;
-      net.minecraftforge.event.entity.living.LivingChangeTargetEvent changeTargetEvent = net.minecraftforge.common.ForgeHooks.onLivingChangeTarget(this, p_21544_, net.minecraftforge.event.entity.living.LivingChangeTargetEvent.LivingTargetType.MOB_TARGET);
-      if(!changeTargetEvent.isCanceled()) {
-         this.target = changeTargetEvent.getNewTarget();
-      }
+      this.setTarget(p_21544_, EntityTargetEvent.TargetReason.UNKNOWN, true);
    }
 
    // Mohist start
@@ -255,11 +251,23 @@ public abstract class Mob extends LivingEntity implements Targeting {
       net.minecraftforge.event.entity.living.LivingChangeTargetEvent changeTargetEvent = net.minecraftforge.common.ForgeHooks.onLivingChangeTarget(this, pTarget, net.minecraftforge.event.entity.living.LivingChangeTargetEvent.LivingTargetType.MOB_TARGET);
       changeTargetEvent.setReason(reason);
       changeTargetEvent.setfireCBEvent(fireEvent);
-      if (!changeTargetEvent.isCanceled()) {
-         this.target = changeTargetEvent.getNewTarget();
-      } else {
+      if (changeTargetEvent.isCanceled()) {
          return false;
       }
+      LivingEntity newTarget = changeTargetEvent.getNewTarget();
+      if (fireEvent) {
+         EntityTargetEvent.TargetReason targetReason = reason;
+         if (targetReason == EntityTargetEvent.TargetReason.UNKNOWN && this.target != null && newTarget == null) {
+            targetReason = this.target.isAlive() ? EntityTargetEvent.TargetReason.FORGOT_TARGET : EntityTargetEvent.TargetReason.TARGET_DIED;
+         }
+         org.bukkit.event.entity.EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(this, newTarget, targetReason);
+         if (event.isCancelled()) {
+            return false;
+         }
+         newTarget = event.getTarget() != null ? ((org.bukkit.craftbukkit.v1_20_R1.entity.CraftLivingEntity) event.getTarget()).getHandle() : null;
+         changeTargetEvent.setNewTarget(newTarget);
+      }
+      this.target = newTarget;
       return true;
    }
    // Mohist end

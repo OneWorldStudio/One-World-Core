@@ -2,6 +2,7 @@ package org.bukkit.inventory.meta;
 
 import com.google.common.collect.Multimap;
 import net.kyori.adventure.text.Component;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
@@ -326,6 +327,50 @@ public interface ItemMeta extends Cloneable, ConfigurationSerializable, Persiste
      * @param unbreakable true if set unbreakable
      */
     void setUnbreakable(boolean unbreakable);
+
+    /**
+     * Checks if this item meta has placeable block keys.
+     *
+     * @return true if placeable block keys are set
+     */
+    boolean hasPlaceableKeys();
+
+    /**
+     * Gets the block keys this item can be placed on in adventure mode.
+     *
+     * @return an immutable collection of placeable block keys
+     */
+    @NotNull
+    Collection<NamespacedKey> getPlaceableKeys();
+
+    /**
+     * Sets the block keys this item can be placed on in adventure mode.
+     *
+     * @param placeableKeys block keys to allow, or null to clear
+     */
+    void setPlaceableKeys(@Nullable Collection<NamespacedKey> placeableKeys);
+
+    /**
+     * Checks if this item meta has destroyable block keys.
+     *
+     * @return true if destroyable block keys are set
+     */
+    boolean hasDestroyableKeys();
+
+    /**
+     * Gets the block keys this item can break in adventure mode.
+     *
+     * @return an immutable collection of destroyable block keys
+     */
+    @NotNull
+    Collection<NamespacedKey> getDestroyableKeys();
+
+    /**
+     * Sets the block keys this item can break in adventure mode.
+     *
+     * @param destroyableKeys block keys to allow, or null to clear
+     */
+    void setDestroyableKeys(@Nullable Collection<NamespacedKey> destroyableKeys);
 
     /**
      * Checks for the existence of any AttributeModifiers.

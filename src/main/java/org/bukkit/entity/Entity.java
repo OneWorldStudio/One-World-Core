@@ -236,6 +236,15 @@ public interface Entity extends Metadatable, CommandSender, Nameable, Persistent
     }
 
     /**
+     * Gets the Paper-compatible entity scheduler.
+     *
+     * @return the entity scheduler
+     */
+    default @NotNull com.oneworldstudiomc.paper.threadedregions.scheduler.EntityScheduler getScheduler() {
+        return new com.oneworldstudiomc.paper.threadedregions.scheduler.BukkitEntityScheduler(this);
+    }
+
+    /**
      * Teleports this entity to the target Entity. If this entity is riding a
      * vehicle, it will be dismounted prior to teleportation.
      *
@@ -564,6 +573,79 @@ public interface Entity extends Metadatable, CommandSender, Nameable, Persistent
      */
     @NotNull
     public Sound getSwimHighSpeedSplashSound();
+
+    // Paper start - Adventure sound compatibility
+    /**
+     * Play an Adventure sound for this entity from explicit coordinates.
+     *
+     * @param sound adventure sound
+     * @param x x-coordinate
+     * @param y y-coordinate
+     * @param z z-coordinate
+     */
+    default void playSound(@NotNull net.kyori.adventure.sound.Sound sound, double x, double y, double z) {
+        if (this instanceof Player player) {
+            player.playSound(
+                    new Location(this.getWorld(), x, y, z),
+                    sound.name().asString(),
+                    entityAdventureSourceToCategory(sound.source()),
+                    sound.volume(),
+                    sound.pitch()
+            );
+            return;
+        }
+
+        this.getWorld().playSound(sound, x, y, z);
+    }
+
+    /**
+     * Play an Adventure sound for this entity using an emitter.
+     *
+     * @param sound adventure sound
+     * @param emitter sound emitter
+     */
+    default void playSound(@NotNull net.kyori.adventure.sound.Sound sound, @NotNull net.kyori.adventure.sound.Sound.Emitter emitter) {
+        if (this instanceof Player player) {
+            if (emitter instanceof Entity entity) {
+                player.playSound(
+                        entity,
+                        sound.name().asString(),
+                        entityAdventureSourceToCategory(sound.source()),
+                        sound.volume(),
+                        sound.pitch()
+                );
+                return;
+            }
+
+            final Location fallback = player.getLocation();
+            player.playSound(
+                    fallback,
+                    sound.name().asString(),
+                    entityAdventureSourceToCategory(sound.source()),
+                    sound.volume(),
+                    sound.pitch()
+            );
+            return;
+        }
+
+        this.getWorld().playSound(sound, emitter);
+    }
+
+    private static @NotNull org.bukkit.SoundCategory entityAdventureSourceToCategory(@NotNull net.kyori.adventure.sound.Sound.Source source) {
+        return switch (source) {
+            case MASTER -> org.bukkit.SoundCategory.MASTER;
+            case MUSIC -> org.bukkit.SoundCategory.MUSIC;
+            case RECORD -> org.bukkit.SoundCategory.RECORDS;
+            case WEATHER -> org.bukkit.SoundCategory.WEATHER;
+            case BLOCK -> org.bukkit.SoundCategory.BLOCKS;
+            case HOSTILE -> org.bukkit.SoundCategory.HOSTILE;
+            case NEUTRAL -> org.bukkit.SoundCategory.NEUTRAL;
+            case PLAYER -> org.bukkit.SoundCategory.PLAYERS;
+            case AMBIENT -> org.bukkit.SoundCategory.AMBIENT;
+            case VOICE -> org.bukkit.SoundCategory.VOICE;
+        };
+    }
+    // Paper end - Adventure sound compatibility
 
     /**
      * Returns whether this entity is inside a vehicle.

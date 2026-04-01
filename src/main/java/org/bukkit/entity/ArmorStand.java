@@ -294,6 +294,20 @@ public interface ArmorStand extends LivingEntity {
     void setMarker(boolean marker);
 
     /**
+     * Gets whether this armor stand is allowed to tick.
+     *
+     * @return true if the armor stand will tick
+     */
+    boolean canTick();
+
+    /**
+     * Sets whether this armor stand is allowed to tick.
+     *
+     * @param canTick true to allow ticking
+     */
+    void setCanTick(boolean canTick);
+
+    /**
      * Locks the equipment slot with the specified
      * {@link LockType locking mechanism}.
      *

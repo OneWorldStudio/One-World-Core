@@ -596,11 +596,11 @@ public class ServerGamePacketListenerImpl implements ServerPlayerConnection, Tic
                // LOGGER.warn("{} (vehicle of {}) moved wrongly! {}", entity.getName().getString(), this.player.getName().getString(), Math.sqrt(d10));
             }
             Location curPos = this.getCraftPlayer().getLocation(); // Spigot
-
-            entity.absMoveTo(d3, d4, d5, this.player.getYRot(), this.player.getXRot());
+            float vehicleYRot = entity.getYRot(), vehicleXRot = entity.getXRot();
+            entity.absMoveTo(d3, d4, d5, f, f1);
             boolean flag3 = serverlevel.noCollision(entity, entity.getBoundingBox().deflate(0.0625D));
             if (flag && (flag2 || !flag3)) {
-               entity.absMoveTo(d0, d1, d2, this.player.getYRot(), this.player.getXRot());
+               entity.absMoveTo(d0, d1, d2, vehicleYRot, vehicleXRot);
                this.connection.send(new ClientboundMoveVehiclePacket(entity));
                return;
             }

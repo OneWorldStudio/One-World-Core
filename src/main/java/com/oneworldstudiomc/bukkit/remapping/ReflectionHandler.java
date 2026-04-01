@@ -222,6 +222,11 @@ public class ReflectionHandler extends ClassLoader {
 
     // bukkit -> srg
     public static Class<?> redirectClassForName(String cl, boolean initialize, ClassLoader classLoader) throws ClassNotFoundException {
+        Class<?> directClass = tryLoadOriginalClass(cl, initialize, classLoader);
+        if (directClass != null) {
+            return directClass;
+        }
+
         String mapped = remapper.mapType(cl.replace('.', '/')).replace('/', '.');
         try {
             return Class.forName(mapped, initialize, classLoader);
@@ -260,6 +265,23 @@ public class ReflectionHandler extends ClassLoader {
                 throw cnf;
             }
             throw new ClassNotFoundException(cl, e);
+        }
+    }
+
+    private static Class<?> tryLoadOriginalClass(String cl, boolean initialize, ClassLoader classLoader) throws ClassNotFoundException {
+        if (classLoader == null) {
+            return null;
+        }
+
+        String resourcePath = cl.replace('.', '/') + ".class";
+        if (classLoader.getResource(resourcePath) == null) {
+            return null;
+        }
+
+        try {
+            return Class.forName(cl, initialize, classLoader);
+        } catch (NoClassDefFoundError error) {
+            throw new ClassNotFoundException(cl, error);
         }
     }
 

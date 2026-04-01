@@ -2,6 +2,9 @@ package org.bukkit;
 
 import com.google.common.collect.ImmutableList;
 import com.oneworldstudiomc.OneWorldCore;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.AsyncScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.GlobalRegionScheduler;
+import com.oneworldstudiomc.paper.threadedregions.scheduler.RegionScheduler;
 import org.bukkit.Warning.WarningState;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.block.data.BlockData;
@@ -678,6 +681,36 @@ public final class Bukkit {
     @NotNull
     public static BukkitScheduler getScheduler() {
         return server.getScheduler();
+    }
+
+    /**
+     * Gets the Paper-compatible global region scheduler.
+     *
+     * @return the global region scheduler
+     */
+    @NotNull
+    public static GlobalRegionScheduler getGlobalRegionScheduler() {
+        return server.getGlobalRegionScheduler();
+    }
+
+    /**
+     * Gets the Paper-compatible region scheduler.
+     *
+     * @return the region scheduler
+     */
+    @NotNull
+    public static RegionScheduler getRegionScheduler() {
+        return server.getRegionScheduler();
+    }
+
+    /**
+     * Gets the Paper-compatible async scheduler.
+     *
+     * @return the async scheduler
+     */
+    @NotNull
+    public static AsyncScheduler getAsyncScheduler() {
+        return server.getAsyncScheduler();
     }
 
     /**
@@ -1620,6 +1653,47 @@ public final class Bukkit {
     }
 
     /**
+     * Paper-compatible alias for checking the global tick thread.
+     *
+     * @return true when called from the main server thread
+     */
+    public static boolean isGlobalTickThread() {
+        return server.isGlobalTickThread();
+    }
+
+    /**
+     * Checks whether the current thread owns the given entity's region.
+     *
+     * @param entity entity to check
+     * @return true when safe to access from the current thread
+     */
+    public static boolean isOwnedByCurrentRegion(@NotNull Entity entity) {
+        return server.isOwnedByCurrentRegion(entity);
+    }
+
+    /**
+     * Checks whether the current thread owns the given location's region.
+     *
+     * @param location location to check
+     * @return true when safe to access from the current thread
+     */
+    public static boolean isOwnedByCurrentRegion(@NotNull Location location) {
+        return server.isOwnedByCurrentRegion(location);
+    }
+
+    /**
+     * Checks whether the current thread owns the given chunk region.
+     *
+     * @param world world to check
+     * @param chunkX chunk x coordinate
+     * @param chunkZ chunk z coordinate
+     * @return true when safe to access from the current thread
+     */
+    public static boolean isOwnedByCurrentRegion(@NotNull World world, int chunkX, int chunkZ) {
+        return server.isOwnedByCurrentRegion(world, chunkX, chunkZ);
+    }
+
+    /**
      * Gets the message that is displayed on the server list.
      *
      * @return the servers MOTD
@@ -2109,4 +2183,3 @@ public final class Bukkit {
         return server.isStopping();
     }
 }
-
