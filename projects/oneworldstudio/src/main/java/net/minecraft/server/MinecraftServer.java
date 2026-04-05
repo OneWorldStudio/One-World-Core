@@ -1765,6 +1765,10 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
       worldArrayLast = worldArrayMarker;
       return worldArray;
    }
+   
+   public PlayerList ah() {
+      return this.getPlayerList();
+   }
 
    public void dumpServerProperties(Path p_177911_) throws IOException {
    }

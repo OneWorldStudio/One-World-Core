@@ -741,7 +741,7 @@
        } else {
           Set<String> set = Sets.newLinkedHashSet();
  
-@@ -1481,6 +_,31 @@
+@@ -1481,6 +_,35 @@
  
     public abstract boolean m_7779_(GameProfile p_129840_);
  
@@ -768,6 +768,10 @@
 +      worldArray = this.f_129762_.values().stream().toArray(x -> new ServerLevel[x]);
 +      worldArrayLast = worldArrayMarker;
 +      return worldArray;
++   }
++   
++   public PlayerList ah() {
++      return this.m_6846_();
 +   }
 +
     public void m_142116_(Path p_177911_) throws IOException {

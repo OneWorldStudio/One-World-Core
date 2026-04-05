@@ -1430,10 +1430,7 @@ public class PluginFixManager {
             case "com.sk89q.worldedit.bukkit.adapter.ext.fawe.v1_20_R1.PaperweightAdapter$1" -> PluginFixManager::fixFawePaperweightPropertyCacheLoader;
             case "com.sk89q.worldedit.world.block.BlockTypesCache" -> PluginFixManager::fixWorldEditBlockTypesCache;
             case "com.sk89q.worldedit.world.block.BlockTypesCache$Settings" -> PluginFixManager::fixWorldEditBlockTypesCacheSettings;
-            case "com.earth2me.essentials.utils.VersionUtil" -> node -> {
-                helloWorld(node, 110, 109);
-                helloWorld(node, "brand:", "peace");
-            };
+            case "com.earth2me.essentials.utils.VersionUtil" -> PluginFixManager::fixEssentialsVersionUtil;
             case "com.sk89q.worldedit.bukkit.BukkitConfiguration" -> node -> {
                 helloWorld(node, "I accept that I will receive no support with this flag enabled.", "mohist");
                 helloWorld(node, "allow-editing-on-unsupported-versions", "mohist");
@@ -1692,6 +1689,53 @@ public class PluginFixManager {
             methodNode.instructions = replacement;
             methodNode.tryCatchBlocks.clear();
             clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixEssentialsVersionUtil(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if ("getServerSupportStatus".equals(methodNode.name)
+                    && "()Lcom/earth2me/essentials/utils/VersionUtil$SupportStatus;".equals(methodNode.desc)) {
+                InsnList replacement = new InsnList();
+                replacement.add(new LdcInsnNode(Type.getObjectType(node.name)));
+                replacement.add(new MethodInsnNode(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(PluginFixManager.class),
+                        "essentialsGetServerSupportStatusCompat",
+                        "(Ljava/lang/Class;)Ljava/lang/Object;",
+                        false
+                ));
+                replacement.add(new org.objectweb.asm.tree.TypeInsnNode(
+                        Opcodes.CHECKCAST,
+                        "com/earth2me/essentials/utils/VersionUtil$SupportStatus"
+                ));
+                replacement.add(new InsnNode(ARETURN));
+                methodNode.instructions = replacement;
+                methodNode.tryCatchBlocks.clear();
+                clearLocalDebugInfo(methodNode);
+                continue;
+            }
+
+            if ("getSupportStatusClass".equals(methodNode.name)
+                    && "()Ljava/lang/String;".equals(methodNode.desc)) {
+                InsnList replacement = new InsnList();
+                replacement.add(new InsnNode(Opcodes.ACONST_NULL));
+                replacement.add(new InsnNode(ARETURN));
+                methodNode.instructions = replacement;
+                methodNode.tryCatchBlocks.clear();
+                clearLocalDebugInfo(methodNode);
+                continue;
+            }
+
+            if ("isServerSupported".equals(methodNode.name)
+                    && "()Z".equals(methodNode.desc)) {
+                InsnList replacement = new InsnList();
+                replacement.add(new InsnNode(Opcodes.ICONST_1));
+                replacement.add(new InsnNode(Opcodes.IRETURN));
+                methodNode.instructions = replacement;
+                methodNode.tryCatchBlocks.clear();
+                clearLocalDebugInfo(methodNode);
+            }
         }
     }
 
@@ -5528,6 +5572,40 @@ public class PluginFixManager {
             throw runtimeException;
         } catch (Throwable throwable) {
             throw new RuntimeException("Failed to register WorldEdit key " + key, throwable);
+        }
+    }
+
+    public static Object essentialsGetServerSupportStatusCompat(Class<?> versionUtilClass) {
+        if (versionUtilClass == null) {
+            throw new IllegalStateException("Essentials VersionUtil class is unavailable");
+        }
+
+        try {
+            ClassLoader classLoader = versionUtilClass.getClassLoader();
+            Class<?> supportStatusClass = Class.forName(
+                    "com.earth2me.essentials.utils.VersionUtil$SupportStatus",
+                    false,
+                    classLoader
+            );
+
+            @SuppressWarnings({"rawtypes", "unchecked"})
+            Enum<?> supportStatus = Enum.valueOf((Class<? extends Enum>) supportStatusClass.asSubclass(Enum.class), "FULL");
+
+            Field supportStatusField = findFieldByNameCompat(versionUtilClass, "supportStatus");
+            if (supportStatusField != null) {
+                supportStatusField.setAccessible(true);
+                supportStatusField.set(null, supportStatus);
+            }
+
+            Field supportStatusClassField = findFieldByNameCompat(versionUtilClass, "supportStatusClass");
+            if (supportStatusClassField != null) {
+                supportStatusClassField.setAccessible(true);
+                supportStatusClassField.set(null, null);
+            }
+
+            return supportStatus;
+        } catch (Throwable throwable) {
+            throw new RuntimeException("Failed to spoof Essentials server support status", throwable);
         }
     }
 
