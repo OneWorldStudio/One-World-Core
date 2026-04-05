@@ -128,7 +128,7 @@
        ResourceKey<Level> resourcekey = compoundtag != null ? DimensionType.m_63911_(new Dynamic<>(NbtOps.f_128958_, compoundtag.m_128423_("Dimension"))).resultOrPartial(f_11188_::error).orElse(Level.f_46428_) : Level.f_46428_;
        ServerLevel serverlevel = this.f_11195_.m_129880_(resourcekey);
        ServerLevel serverlevel1;
-@@ -167,22 +_,38 @@
+@@ -167,22 +_,37 @@
        p_11263_.m_284127_(serverlevel1);
        String s1 = "local";
        if (p_11262_.m_129523_() != null) {
@@ -169,8 +169,8 @@
 +      MinecraftForge.EVENT_BUS.post(new OnDatapackSyncEvent(this, p_11263_));
        servergamepacketlistenerimpl.m_9829_(new ClientboundUpdateRecipesPacket(this.f_11195_.m_129894_().m_44051_()));
        servergamepacketlistenerimpl.m_9829_(new ClientboundUpdateTagsPacket(TagNetworkSerialization.m_245799_(this.f_243858_)));
-       this.m_11289_(p_11263_);
-@@ -197,20 +_,71 @@
+-      this.m_11289_(p_11263_);
+@@ -197,20 +_,74 @@
           mutablecomponent = Component.m_237110_("multiplayer.player.joined.renamed", p_11263_.m_5446_(), s);
        }
  
@@ -190,6 +190,9 @@
        this.f_11196_.add(p_11263_);
 +      this.playersByName.put(p_11263_.m_6302_().toLowerCase(Locale.ROOT), p_11263_); // Spigot
        this.f_11197_.put(p_11263_.m_20148_(), p_11263_);
++      // Send the permission-level packet only after the player is tracked to avoid
++      // temporary-player wrappers in packet listeners such as ProtocolLib/F3NPerm.
++      this.m_11289_(p_11263_);
 -      this.m_11268_(ClientboundPlayerInfoUpdatePacket.m_247122_(List.of(p_11263_)));
 +
 +      // CraftBukkit start
@@ -585,7 +588,7 @@
 +      serverplayer.f_8906_.m_9829_(new ClientboundChangeDifficultyPacket(worlddata.m_5472_(), worlddata.m_5474_()));
        serverplayer.f_8906_.m_9829_(new ClientboundSetExperiencePacket(serverplayer.f_36080_, serverplayer.f_36079_, serverplayer.f_36078_));
        this.m_11229_(serverplayer, serverlevel1);
-       this.m_11289_(serverplayer);
+-      this.m_11289_(serverplayer);
 -      serverlevel1.m_8845_(serverplayer);
 -      this.f_11196_.add(serverplayer);
 -      this.f_11197_.put(serverplayer.m_20148_(), serverplayer);
@@ -594,6 +597,7 @@
 +         this.f_11196_.add(serverplayer);
 +         this.playersByName.put(serverplayer.m_6302_().toLowerCase(Locale.ROOT), serverplayer); // Spigot
 +         this.f_11197_.put(serverplayer.m_20148_(), serverplayer);
++         this.m_11289_(serverplayer);
 +      }
        serverplayer.m_143429_();
        serverplayer.m_21153_(serverplayer.m_21223_());

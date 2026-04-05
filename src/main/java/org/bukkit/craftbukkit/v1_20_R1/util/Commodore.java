@@ -33,6 +33,7 @@ import java.util.zip.ZipEntry;
 // CHECKSTYLE:OFF
 public class Commodore
 {
+    private static final int MAX_ASM_SUPPORTED_CLASS_FILE_VERSION = 64;
 
     private static final Set<String> EVIL = new HashSet<>( Arrays.asList(
             "org/bukkit/World (III)I getBlockTypeIdAt",
@@ -126,6 +127,11 @@ public class Commodore
 
     public static byte[] convert(byte[] b, final boolean modern)
     {
+        if ( classFileMajorVersion( b ) > MAX_ASM_SUPPORTED_CLASS_FILE_VERSION )
+        {
+            return b;
+        }
+
         ClassReader cr = new ClassReader( b );
         ClassWriter cw = new ClassWriter( cr, 0 );
 
@@ -432,5 +438,22 @@ public class Commodore
         }, 0 );
 
         return cw.toByteArray();
+    }
+
+    private static int classFileMajorVersion(byte[] bytecode)
+    {
+        if ( bytecode == null || bytecode.length < 8 )
+        {
+            return -1;
+        }
+        int magic = ( ( bytecode[0] & 0xFF ) << 24 )
+                | ( ( bytecode[1] & 0xFF ) << 16 )
+                | ( ( bytecode[2] & 0xFF ) << 8 )
+                | ( bytecode[3] & 0xFF );
+        if ( magic != 0xCAFEBABE )
+        {
+            return -1;
+        }
+        return ( ( bytecode[6] & 0xFF ) << 8 ) | ( bytecode[7] & 0xFF );
     }
 }

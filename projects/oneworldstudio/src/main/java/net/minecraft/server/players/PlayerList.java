@@ -250,7 +250,6 @@ public abstract class PlayerList {
       MinecraftForge.EVENT_BUS.post(new OnDatapackSyncEvent(this, p_11263_));
       servergamepacketlistenerimpl.send(new ClientboundUpdateRecipesPacket(this.server.getRecipeManager().getRecipes()));
       servergamepacketlistenerimpl.send(new ClientboundUpdateTagsPacket(TagNetworkSerialization.serializeTagsToNetwork(this.registries)));
-      this.sendPlayerPermissionLevel(p_11263_);
       p_11263_.getStats().markAllDirty();
       p_11263_.getRecipeBook().sendInitialRecipeBook(p_11263_);
       this.updateEntireScoreboard(serverlevel1.getScoreboard(), p_11263_);
@@ -276,6 +275,9 @@ public abstract class PlayerList {
       this.players.add(p_11263_);
       this.playersByName.put(p_11263_.getScoreboardName().toLowerCase(Locale.ROOT), p_11263_); // Spigot
       this.playersByUUID.put(p_11263_.getUUID(), p_11263_);
+      // Send the permission-level packet only after the player is tracked to avoid
+      // temporary-player wrappers in packet listeners such as ProtocolLib/F3NPerm.
+      this.sendPlayerPermissionLevel(p_11263_);
 
       // CraftBukkit start
       CraftPlayer bukkitPlayer = p_11263_.getBukkitEntity();
@@ -722,12 +724,12 @@ public abstract class PlayerList {
       serverplayer.connection.send(new ClientboundChangeDifficultyPacket(worlddata.getDifficulty(), worlddata.isDifficultyLocked()));
       serverplayer.connection.send(new ClientboundSetExperiencePacket(serverplayer.experienceProgress, serverplayer.totalExperience, serverplayer.experienceLevel));
       this.sendLevelInfo(serverplayer, serverlevel1);
-      this.sendPlayerPermissionLevel(serverplayer);
       if (!p_11237_.connection.isDisconnected()) {
          serverlevel1.addRespawnedPlayer(serverplayer);
          this.players.add(serverplayer);
          this.playersByName.put(serverplayer.getScoreboardName().toLowerCase(Locale.ROOT), serverplayer); // Spigot
          this.playersByUUID.put(serverplayer.getUUID(), serverplayer);
+         this.sendPlayerPermissionLevel(serverplayer);
       }
       serverplayer.initInventoryMenu();
       serverplayer.setHealth(serverplayer.getHealth());

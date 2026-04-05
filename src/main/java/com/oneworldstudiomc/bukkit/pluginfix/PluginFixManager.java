@@ -11,9 +11,12 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntConsumer;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.bukkit.entity.EntityType;
+import org.bukkit.craftbukkit.v1_20_R1.entity.CraftPlayer;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -1387,10 +1390,12 @@ public class PluginFixManager {
         }
         if (normalizedClassName.startsWith("io.lumine.mythiccrucible.")) {
             clazz = patch(clazz, PluginFixManager::fixMythicCrucibleInventoryViewInvoke);
+            clazz = patch(clazz, PluginFixManager::fixMythicPaperApiCompat);
         }
         if (normalizedClassName.startsWith("io.lumine.mythic.")) {
             clazz = patch(clazz, PluginFixManager::fixMythicEntityTypeConstants);
             clazz = patch(clazz, PluginFixManager::fixMythicAttributeApiCompat);
+            clazz = patch(clazz, PluginFixManager::fixMythicPaperApiCompat);
         }
         if (normalizedClassName.equals("revxrsal.zapper.DependencyManager")) {
             return patch(clazz, PluginFixManager::fixZapperDependencyManager);
@@ -1407,6 +1412,7 @@ public class PluginFixManager {
             case "com.sk89q.worldedit.bukkit.adapter.Refraction" -> WorldEdit::handlePickName;
             case "com.sk89q.worldedit.bukkit.adapter.impl.v1_20_R1.PaperweightAdapter$SpigotWatchdog" -> WorldEdit::handleWatchdog;
             case "com.comphenix.protocol.wrappers.WrappedChatComponent" -> PluginFixManager::fixProtocolLibWrappedChatComponent;
+            case "nexus.slime.f3nperm.provider.ProtocolLibProvider" -> PluginFixManager::fixF3NPermProtocolLibProvider;
             case "itemsadder.m.aun" -> PluginFixManager::fixAdventureSerializerBuilderOptionsCompat;
             case "itemsadder.m.ajw" -> PluginFixManager::fixItemsAdderPacketConnectionCompat;
             case "itemsadder.m.ya" -> PluginFixManager::fixItemsAdderServerVersionGate;
@@ -1607,6 +1613,38 @@ public class PluginFixManager {
             methodNode.tryCatchBlocks.clear();
             methodNode.maxStack = 3;
             methodNode.maxLocals = 0;
+            clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixF3NPermProtocolLibProvider(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"update".equals(methodNode.name) || !"(Lorg/bukkit/entity/Player;)V".equals(methodNode.desc)) {
+                continue;
+            }
+
+            InsnList toInject = new InsnList();
+            toInject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+            toInject.add(new FieldInsnNode(
+                    Opcodes.GETFIELD,
+                    node.name,
+                    "plugin",
+                    "Lnexus/slime/f3nperm/F3NPermPlugin;"
+            ));
+            toInject.add(new VarInsnNode(Opcodes.ALOAD, 1));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "f3npermProtocolLibUpdateCompat",
+                    "(Ljava/lang/Object;Lorg/bukkit/entity/Player;)V",
+                    false
+            ));
+            toInject.add(new InsnNode(Opcodes.RETURN));
+
+            methodNode.instructions = toInject;
+            methodNode.tryCatchBlocks.clear();
+            methodNode.maxStack = 2;
+            methodNode.maxLocals = 2;
             clearLocalDebugInfo(methodNode);
         }
     }
@@ -1887,6 +1925,55 @@ public class PluginFixManager {
         );
         Method accessorFactory = accessorsClass.getDeclaredMethod("getMethodAccessor", Method.class);
         return accessorFactory.invoke(null, method);
+    }
+
+    public static void f3npermProtocolLibUpdateCompat(Object plugin, org.bukkit.entity.Player player) {
+        try {
+            Method getPermissionLevel = plugin.getClass().getMethod("getF3NPermPermissionLevel", org.bukkit.entity.Player.class);
+            Object permissionLevel = getPermissionLevel.invoke(plugin, player);
+            if (permissionLevel == null) {
+                throw new IllegalStateException("F3NPerm returned a null permission level");
+            }
+
+            Method toStatusByte = permissionLevel.getClass().getMethod("toStatusByte");
+            Object statusValue = toStatusByte.invoke(permissionLevel);
+            byte status = statusValue instanceof Number number ? number.byteValue() : ((Byte) statusValue).byteValue();
+
+            if (!(player instanceof CraftPlayer craftPlayer)) {
+                throw new IllegalStateException("Could not resolve CraftPlayer handle");
+            }
+
+            Entity entity = craftPlayer.getHandle();
+            ClientboundEntityEventPacket packet = new ClientboundEntityEventPacket(entity, status);
+            craftPlayer.getHandle().connection.send(packet);
+        } catch (Throwable throwable) {
+            Throwable cause = throwable;
+            if (cause instanceof java.lang.reflect.InvocationTargetException invocationTargetException
+                    && invocationTargetException.getCause() != null) {
+                cause = invocationTargetException.getCause();
+            }
+            throw f3npermProviderExceptionCompat(plugin, "Could not send status packet!", cause);
+        }
+    }
+
+    private static RuntimeException f3npermProviderExceptionCompat(Object plugin, String message, Throwable cause) {
+        try {
+            ClassLoader classLoader = plugin != null
+                    ? plugin.getClass().getClassLoader()
+                    : PluginFixManager.class.getClassLoader();
+            Class<?> providerExceptionClass = Class.forName(
+                    "nexus.slime.f3nperm.provider.ProviderException",
+                    true,
+                    classLoader
+            );
+            Constructor<?> constructor = providerExceptionClass.getConstructor(String.class, Throwable.class);
+            Object providerException = constructor.newInstance(message, cause);
+            if (providerException instanceof RuntimeException runtimeException) {
+                return runtimeException;
+            }
+        } catch (Throwable ignored) {
+        }
+        return new RuntimeException(message, cause);
     }
 
     private static void fixCloudCraftBukkitReflectionFindMethod(ClassNode node) {
@@ -2839,10 +2926,17 @@ public class PluginFixManager {
                 continue;
             }
             InsnList toInject = new InsnList();
-            toInject.add(new InsnNode(Opcodes.ICONST_1));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "mythicIsPaperCompat",
+                    "()Z",
+                    false
+            ));
             toInject.add(new InsnNode(Opcodes.IRETURN));
             methodNode.instructions = toInject;
             methodNode.tryCatchBlocks.clear();
+            clearLocalDebugInfo(methodNode);
         }
     }
 
@@ -2905,6 +2999,113 @@ public class PluginFixManager {
                 clearLocalDebugInfo(methodNode);
             }
         }
+    }
+
+    private static void fixMythicPaperApiCompat(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            boolean changed = false;
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (!(insn instanceof MethodInsnNode methodInsnNode)) {
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() == Opcodes.INVOKEINTERFACE
+                        && "org/bukkit/entity/Player".equals(methodInsnNode.owner)
+                        && "getActiveItem".equals(methodInsnNode.name)
+                        && "()Lorg/bukkit/inventory/ItemStack;".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "playerGetActiveItemCompat";
+                    methodInsnNode.desc = "(Lorg/bukkit/entity/Player;)Lorg/bukkit/inventory/ItemStack;";
+                    methodInsnNode.itf = false;
+                    changed = true;
+                    continue;
+                }
+                if ((methodInsnNode.getOpcode() == Opcodes.INVOKEVIRTUAL || methodInsnNode.getOpcode() == Opcodes.INVOKEINTERFACE)
+                        && "org/bukkit/inventory/ItemStack".equals(methodInsnNode.owner)
+                        && "getDataOrDefault".equals(methodInsnNode.name)
+                        && isMythicDataComponentAccessDescriptor(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "itemStackGetDataOrDefaultCompat";
+                    methodInsnNode.desc = "(Lorg/bukkit/inventory/ItemStack;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;";
+                    methodInsnNode.itf = false;
+                    changed = true;
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() == Opcodes.INVOKEINTERFACE
+                        && "org/bukkit/entity/ArmorStand".equals(methodInsnNode.owner)
+                        && "setCanTick".equals(methodInsnNode.name)
+                        && "(Z)V".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "armorStandSetCanTickCompat";
+                    methodInsnNode.desc = "(Lorg/bukkit/entity/ArmorStand;Z)V";
+                    methodInsnNode.itf = false;
+                    changed = true;
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() == Opcodes.INVOKEINTERFACE
+                        && "org/bukkit/entity/ArmorStand".equals(methodInsnNode.owner)
+                        && "setCanMove".equals(methodInsnNode.name)
+                        && "(Z)V".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "armorStandSetCanMoveCompat";
+                    methodInsnNode.desc = "(Lorg/bukkit/entity/ArmorStand;Z)V";
+                    methodInsnNode.itf = false;
+                    changed = true;
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() == Opcodes.INVOKEINTERFACE
+                        && "org/bukkit/entity/ArmorStand".equals(methodInsnNode.owner)
+                        && "setDisabledSlots".equals(methodInsnNode.name)
+                        && "([Lorg/bukkit/inventory/EquipmentSlot;)V".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "armorStandSetDisabledSlotsCompat";
+                    methodInsnNode.desc = "(Lorg/bukkit/entity/ArmorStand;[Lorg/bukkit/inventory/EquipmentSlot;)V";
+                    methodInsnNode.itf = false;
+                    changed = true;
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() == Opcodes.INVOKEINTERFACE
+                        && "org/bukkit/inventory/meta/ItemMeta".equals(methodInsnNode.owner)
+                        && "setPlaceableKeys".equals(methodInsnNode.name)
+                        && "(Ljava/util/Collection;)V".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "itemMetaSetPlaceableKeysCompat";
+                    methodInsnNode.desc = "(Lorg/bukkit/inventory/meta/ItemMeta;Ljava/util/Collection;)V";
+                    methodInsnNode.itf = false;
+                    changed = true;
+                    continue;
+                }
+                if (methodInsnNode.getOpcode() == Opcodes.INVOKEINTERFACE
+                        && "org/bukkit/inventory/meta/ItemMeta".equals(methodInsnNode.owner)
+                        && "setDestroyableKeys".equals(methodInsnNode.name)
+                        && "(Ljava/util/Collection;)V".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "itemMetaSetDestroyableKeysCompat";
+                    methodInsnNode.desc = "(Lorg/bukkit/inventory/meta/ItemMeta;Ljava/util/Collection;)V";
+                    methodInsnNode.itf = false;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    private static boolean isMythicDataComponentAccessDescriptor(String descriptor) {
+        if (descriptor == null) {
+            return false;
+        }
+        return "(Lio/papermc/paper/datacomponent/DataComponentType;Ljava/lang/Object;)Ljava/lang/Object;".equals(descriptor)
+                || "(Lio/papermc/paper/datacomponent/DataComponentType$Valued;Ljava/lang/Object;)Ljava/lang/Object;".equals(descriptor)
+                || "(Lcom/oneworldstudiomc/paper/datacomponent/DataComponentType;Ljava/lang/Object;)Ljava/lang/Object;".equals(descriptor)
+                || "(Lcom/oneworldstudiomc/paper/datacomponent/DataComponentType$Valued;Ljava/lang/Object;)Ljava/lang/Object;".equals(descriptor);
     }
 
     private static void fixMythicBukkitBootstrap(ClassNode node) {
@@ -5137,6 +5338,174 @@ public class PluginFixManager {
             case "GUST_SMALL" -> "SMALL_GUST";
             default -> name;
         };
+    }
+
+    public static boolean mythicIsPaperCompat() {
+        try {
+            Class.forName("net.minecraftforge.common.MinecraftForge", false, PluginFixManager.class.getClassLoader());
+            return false;
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            String serverName = org.bukkit.Bukkit.getName();
+            if (serverName != null) {
+                return serverName.toLowerCase(Locale.ROOT).contains("paper");
+            }
+        } catch (Throwable ignored) {
+        }
+
+        try {
+            Class.forName("io.papermc.paper.configuration.Configuration", false, PluginFixManager.class.getClassLoader());
+            return true;
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    public static org.bukkit.inventory.ItemStack playerGetActiveItemCompat(org.bukkit.entity.Player player) {
+        if (player == null) {
+            return null;
+        }
+        try {
+            return player.getItemInUse();
+        } catch (Throwable ignored) {
+        }
+        try {
+            Method method = findMethodCompat(player.getClass(), "getActiveItem");
+            if (method != null) {
+                Object result = method.invoke(player);
+                if (result instanceof org.bukkit.inventory.ItemStack itemStack) {
+                    return itemStack;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            return player.getInventory().getItemInMainHand();
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    public static Object itemStackGetDataOrDefaultCompat(org.bukkit.inventory.ItemStack itemStack, Object componentType, Object defaultValue) {
+        if (itemStack == null || componentType == null) {
+            return defaultValue;
+        }
+        if (matchesDataComponentCompat(componentType, "DAMAGE")) {
+            return Integer.valueOf(itemStackDamageCompat(itemStack));
+        }
+        if (matchesDataComponentCompat(componentType, "MAX_DAMAGE")) {
+            return Integer.valueOf(itemStackMaxDamageCompat(itemStack));
+        }
+        return defaultValue;
+    }
+
+    public static void armorStandSetCanTickCompat(org.bukkit.entity.ArmorStand armorStand, boolean canTick) {
+        if (armorStand == null) {
+            return;
+        }
+        if (invokeBooleanArgumentMethodCompat(armorStand, canTick, "setCanTick")) {
+            return;
+        }
+        Object handle = invokeNoArgs(armorStand, "getHandle");
+        invokeBooleanArgumentMethodCompat(handle, canTick, "canUpdate", "setCanTick");
+    }
+
+    public static void armorStandSetCanMoveCompat(org.bukkit.entity.ArmorStand armorStand, boolean canMove) {
+        invokeBooleanArgumentMethodCompat(armorStand, canMove, "setCanMove");
+    }
+
+    public static void armorStandSetDisabledSlotsCompat(org.bukkit.entity.ArmorStand armorStand, org.bukkit.inventory.EquipmentSlot[] disabledSlots) {
+        invokeSingleArgumentMethodCompat(armorStand, org.bukkit.inventory.EquipmentSlot[].class, disabledSlots, "setDisabledSlots");
+    }
+
+    public static void itemMetaSetPlaceableKeysCompat(org.bukkit.inventory.meta.ItemMeta itemMeta, java.util.Collection<?> placeableKeys) {
+        invokeSingleArgumentMethodCompat(itemMeta, java.util.Collection.class, placeableKeys, "setPlaceableKeys");
+    }
+
+    public static void itemMetaSetDestroyableKeysCompat(org.bukkit.inventory.meta.ItemMeta itemMeta, java.util.Collection<?> destroyableKeys) {
+        invokeSingleArgumentMethodCompat(itemMeta, java.util.Collection.class, destroyableKeys, "setDestroyableKeys");
+    }
+
+    private static boolean matchesDataComponentCompat(Object componentType, String fieldName) {
+        return sameDataComponentCompat(componentType, "com.oneworldstudiomc.paper.datacomponent.DataComponentTypes", fieldName)
+                || sameDataComponentCompat(componentType, "io.papermc.paper.datacomponent.DataComponentTypes", fieldName);
+    }
+
+    private static boolean sameDataComponentCompat(Object componentType, String ownerName, String fieldName) {
+        if (componentType == null || ownerName == null || fieldName == null) {
+            return false;
+        }
+        try {
+            Class<?> owner = Class.forName(ownerName, false, componentType.getClass().getClassLoader());
+            Field field = owner.getField(fieldName);
+            return field.get(null) == componentType;
+        } catch (Throwable ignored) {
+        }
+        try {
+            Class<?> owner = Class.forName(ownerName, false, PluginFixManager.class.getClassLoader());
+            Field field = owner.getField(fieldName);
+            return field.get(null) == componentType;
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    private static int itemStackDamageCompat(org.bukkit.inventory.ItemStack itemStack) {
+        try {
+            org.bukkit.inventory.meta.ItemMeta itemMeta = itemStack.getItemMeta();
+            if (itemMeta instanceof org.bukkit.inventory.meta.Damageable damageable) {
+                return Math.max(damageable.getDamage(), 0);
+            }
+        } catch (Throwable ignored) {
+        }
+        return 0;
+    }
+
+    private static int itemStackMaxDamageCompat(org.bukkit.inventory.ItemStack itemStack) {
+        try {
+            org.bukkit.inventory.meta.ItemMeta itemMeta = itemStack.getItemMeta();
+            Method hasMaxDamage = findMethodCompat(itemMeta.getClass(), "hasMaxDamage");
+            Method getMaxDamage = findMethodCompat(itemMeta.getClass(), "getMaxDamage");
+            if (hasMaxDamage != null && getMaxDamage != null) {
+                Object hasValue = hasMaxDamage.invoke(itemMeta);
+                if (Boolean.TRUE.equals(hasValue)) {
+                    Object maxValue = getMaxDamage.invoke(itemMeta);
+                    if (maxValue instanceof Number number) {
+                        return Math.max(number.intValue(), 0);
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            return Math.max(itemStack.getType().getMaxDurability(), 0);
+        } catch (Throwable ignored) {
+        }
+        return 0;
+    }
+
+    private static boolean invokeBooleanArgumentMethodCompat(Object owner, boolean value, String... names) {
+        return invokeSingleArgumentMethodCompat(owner, boolean.class, value, names);
+    }
+
+    private static boolean invokeSingleArgumentMethodCompat(Object owner, Class<?> parameterType, Object value, String... names) {
+        if (owner == null || parameterType == null || names == null) {
+            return false;
+        }
+        for (String name : names) {
+            try {
+                Method method = findMethodCompat(owner.getClass(), name, parameterType);
+                if (method == null) {
+                    continue;
+                }
+                method.invoke(owner, value);
+                return true;
+            } catch (Throwable ignored) {
+            }
+        }
+        return false;
     }
 
     private static Object resolvePluginByNameCompat(String name) {
