@@ -1363,6 +1363,7 @@ public class PluginFixManager {
 
     public static byte[] injectPluginFix(String className, byte[] clazz) {
         String normalizedClassName = className == null ? "" : className.replace('/', '.');
+        List<Consumer<ClassNode>> handlers = null;
 
         if (normalizedClassName.endsWith("PaperLib")) {
             return patch(clazz, PluginFixManager::removePaper);
@@ -1383,19 +1384,19 @@ public class PluginFixManager {
             return patch(clazz, PluginFixManager::fixFancyHologramsLocationAccessors);
         }
         if (normalizedClassName.startsWith("world.bentobox.")) {
-            clazz = patch(clazz, PluginFixManager::fixBentoBoxPatternTypeCompat);
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixBentoBoxPatternTypeCompat);
         }
         if (normalizedClassName.equals("com.onarandombox.MultiverseCore.utils.WorldManager")) {
             return patch(clazz, MultiverseCore::fix);
         }
         if (normalizedClassName.startsWith("io.lumine.mythiccrucible.")) {
-            clazz = patch(clazz, PluginFixManager::fixMythicCrucibleInventoryViewInvoke);
-            clazz = patch(clazz, PluginFixManager::fixMythicPaperApiCompat);
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixMythicCrucibleInventoryViewInvoke);
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixMythicPaperApiCompat);
         }
         if (normalizedClassName.startsWith("io.lumine.mythic.")) {
-            clazz = patch(clazz, PluginFixManager::fixMythicEntityTypeConstants);
-            clazz = patch(clazz, PluginFixManager::fixMythicAttributeApiCompat);
-            clazz = patch(clazz, PluginFixManager::fixMythicPaperApiCompat);
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixMythicEntityTypeConstants);
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixMythicAttributeApiCompat);
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixMythicPaperApiCompat);
         }
         if (normalizedClassName.equals("revxrsal.zapper.DependencyManager")) {
             return patch(clazz, PluginFixManager::fixZapperDependencyManager);
@@ -1404,7 +1405,7 @@ public class PluginFixManager {
             return patch(clazz, PluginFixManager::fixLampCommodoreProvider);
         }
         if (normalizedClassName.startsWith("com.willfp.libreforge.")) {
-            clazz = patch(clazz, PluginFixManager::fixLibreforgePaperOnlyListeners);
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixLibreforgePaperOnlyListeners);
         }
         Consumer<ClassNode> patcher = switch (normalizedClassName) {
             case "com.sk89q.worldedit.bukkit.BukkitAdapter" -> WorldEdit::handleBukkitAdapter;
@@ -1471,18 +1472,36 @@ public class PluginFixManager {
             default -> null;
         };
 
-        return patcher == null ? clazz : patch(clazz, patcher);
+        handlers = appendPatchHandler(handlers, patcher);
+        return handlers == null ? clazz : patch(clazz, handlers);
     }
 
     private static byte[] patch(byte[] basicClass, Consumer<ClassNode> handler) {
+        return patch(basicClass, java.util.List.of(handler));
+    }
+
+    private static byte[] patch(byte[] basicClass, List<Consumer<ClassNode>> handlers) {
         ClassNode node = new ClassNode();
         // Drop debug metadata (LocalVariableTable/LineNumberTable) while patching.
         // This avoids malformed duplicated LVT entries produced by some plugin bytecode combinations.
         new ClassReader(basicClass).accept(node, ClassReader.SKIP_DEBUG);
-        handler.accept(node);
+        for (Consumer<ClassNode> handler : handlers) {
+            handler.accept(node);
+        }
         ClassWriter writer = new ClassWriter(0);
         node.accept(writer);
         return writer.toByteArray();
+    }
+
+    private static List<Consumer<ClassNode>> appendPatchHandler(List<Consumer<ClassNode>> handlers, Consumer<ClassNode> handler) {
+        if (handler == null) {
+            return handlers;
+        }
+        if (handlers == null) {
+            handlers = new ArrayList<>(4);
+        }
+        handlers.add(handler);
+        return handlers;
     }
 
     private static void fixProtocolLibWrappedChatComponent(ClassNode node) {
@@ -3642,49 +3661,25 @@ public class PluginFixManager {
 
     private static void fixRevxrsalBrigadierRegistryHook(ClassNode node) {
         for (MethodNode methodNode : node.methods) {
-            if (!"createBridge".equals(methodNode.name)
-                    || !"()Lrevxrsal/commands/bukkit/brigadier/BukkitBrigadierBridge;".equals(methodNode.desc)) {
+            if ("createBridge".equals(methodNode.name)
+                    && "()Lrevxrsal/commands/bukkit/brigadier/BukkitBrigadierBridge;".equals(methodNode.desc)) {
+                InsnList replacement = new InsnList();
+                replacement.add(new InsnNode(Opcodes.ACONST_NULL));
+                replacement.add(new InsnNode(ARETURN));
+                methodNode.instructions = replacement;
+                methodNode.tryCatchBlocks.clear();
+                clearLocalDebugInfo(methodNode);
                 continue;
             }
 
-            InsnList replacement = new InsnList();
-            replacement.add(new org.objectweb.asm.tree.TypeInsnNode(
-                    Opcodes.NEW,
-                    "revxrsal/commands/bukkit/brigadier/ByReflection"
-            ));
-            replacement.add(new InsnNode(Opcodes.DUP));
-            replacement.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
-            replacement.add(new org.objectweb.asm.tree.FieldInsnNode(
-                    Opcodes.GETFIELD,
-                    node.name,
-                    "plugin",
-                    "Lorg/bukkit/plugin/java/JavaPlugin;"
-            ));
-            replacement.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
-            replacement.add(new org.objectweb.asm.tree.FieldInsnNode(
-                    Opcodes.GETFIELD,
-                    node.name,
-                    "argumentTypes",
-                    "Lrevxrsal/commands/brigadier/types/ArgumentTypes;"
-            ));
-            replacement.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
-            replacement.add(new org.objectweb.asm.tree.FieldInsnNode(
-                    Opcodes.GETFIELD,
-                    node.name,
-                    "actorFactory",
-                    "Lrevxrsal/commands/bukkit/actor/ActorFactory;"
-            ));
-            replacement.add(new MethodInsnNode(
-                    Opcodes.INVOKESPECIAL,
-                    "revxrsal/commands/bukkit/brigadier/ByReflection",
-                    "<init>",
-                    "(Lorg/bukkit/plugin/java/JavaPlugin;Lrevxrsal/commands/brigadier/types/ArgumentTypes;Lrevxrsal/commands/bukkit/actor/ActorFactory;)V",
-                    false
-            ));
-            replacement.add(new InsnNode(ARETURN));
-            methodNode.instructions = replacement;
-            methodNode.tryCatchBlocks.clear();
-            clearLocalDebugInfo(methodNode);
+            if ("onRegistered".equals(methodNode.name)
+                    && "(Lrevxrsal/commands/command/ExecutableCommand;Lrevxrsal/commands/hook/CancelHandle;)V".equals(methodNode.desc)) {
+                InsnList replacement = new InsnList();
+                replacement.add(new InsnNode(Opcodes.RETURN));
+                methodNode.instructions = replacement;
+                methodNode.tryCatchBlocks.clear();
+                clearLocalDebugInfo(methodNode);
+            }
         }
     }
 
