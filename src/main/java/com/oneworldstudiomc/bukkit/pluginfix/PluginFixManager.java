@@ -1365,6 +1365,10 @@ public class PluginFixManager {
         String normalizedClassName = className == null ? "" : className.replace('/', '.');
         List<Consumer<ClassNode>> handlers = null;
 
+        if (normalizedClassName.equals("itemsadder.m.yk")) {
+            return ItemsAdderClassPatcher.patchYkClass(clazz);
+        }
+
         if (normalizedClassName.endsWith("PaperLib")) {
             return patch(clazz, PluginFixManager::removePaper);
         }
@@ -1382,6 +1386,9 @@ public class PluginFixManager {
         }
         if (normalizedClassName.startsWith("de.oliver.fancyholograms.")) {
             return patch(clazz, PluginFixManager::fixFancyHologramsLocationAccessors);
+        }
+        if (normalizedClassName.startsWith("net.islandearth.rpgregions.")) {
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixRpgRegionsSoundCompat);
         }
         if (normalizedClassName.startsWith("world.bentobox.")) {
             handlers = appendPatchHandler(handlers, PluginFixManager::fixBentoBoxPatternTypeCompat);
@@ -1406,6 +1413,9 @@ public class PluginFixManager {
         }
         if (normalizedClassName.startsWith("com.willfp.libreforge.")) {
             handlers = appendPatchHandler(handlers, PluginFixManager::fixLibreforgePaperOnlyListeners);
+        }
+        if (normalizedClassName.endsWith(".libreforge.loader.LibreforgePlugin")) {
+            handlers = appendPatchHandler(handlers, PluginFixManager::fixLibreforgeLoaderDoFetchConfigs);
         }
         Consumer<ClassNode> patcher = switch (normalizedClassName) {
             case "com.sk89q.worldedit.bukkit.BukkitAdapter" -> WorldEdit::handleBukkitAdapter;
@@ -1441,6 +1451,7 @@ public class PluginFixManager {
             case "io.lumine.mythic.bukkit.utils.version.ServerVersion" -> PluginFixManager::fixMythicMobsServerVersion;
             case "io.lumine.mythic.bukkit.BukkitBootstrap" -> PluginFixManager::fixMythicBukkitBootstrap;
             case "io.lumine.mythic.bukkit.adapters.BukkitParticle" -> PluginFixManager::fixMythicBukkitParticleCompat;
+            case "io.lumine.mythic.bukkit.entities.BukkitBabyZombieVillager" -> PluginFixManager::fixMythicBabyZombieVillager;
             case "io.lumine.mythic.core.volatilecode.v1_20_R1.VolatileAIHandlerImpl" -> PluginFixManager::fixMythicMobsAIHandler;
             case "io.lumine.mythic.core.skills.mechanics.SoundEffect" -> PluginFixManager::fixFancyHologramsLocationAccessors;
             case "io.lumine.mythiccrucible.items.ItemManager" -> PluginFixManager::fixMythicCrucibleItemManager;
@@ -1465,6 +1476,7 @@ public class PluginFixManager {
             case "fr.elias.npcs.server.listener.PotionInteractionListener" -> PluginFixManager::fixModeledNpcsPotionInteractionListener;
             case "me.ulrich.clans.library.scoreboardlibrary.implementation.packetAdapter.modern.PacketAccessors" -> PluginFixManager::fixUltimateClansPacketAccessors;
             case "me.ulrich.clans.library.scoreboardlibrary.implementation.packetAdapter.util.reflect.ReflectUtil" -> PluginFixManager::fixUltimateClansReflectUtil;
+            case "me.playbosswar.cmtplayerconditions.utils.WorldTimeTracking" -> PluginFixManager::fixCommandTimerWorldTimeTracking;
             case "rpgregions-libs.commandframework.bukkit.parser.BlockPredicateParser" -> PluginFixManager::fixRpgRegionsBlockPredicateParser;
             default -> null;
         };
@@ -1937,6 +1949,108 @@ public class PluginFixManager {
         }
     }
 
+    private static void fixItemsAdderPlayerListCompat(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            boolean patched = false;
+
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (insn instanceof MethodInsnNode methodInsnNode) {
+                    if (methodInsnNode.getOpcode() == Opcodes.INVOKEVIRTUAL
+                            && "net/minecraft/server/MinecraftServer".equals(methodInsnNode.owner)
+                            && "ah".equals(methodInsnNode.name)
+                            && "()Lnet/minecraft/server/players/PlayerList;".equals(methodInsnNode.desc)) {
+                        methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                        methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                        methodInsnNode.name = "itemsAdderGetPlayerListCompat";
+                        methodInsnNode.desc = "(Lnet/minecraft/server/MinecraftServer;)Lnet/minecraft/server/players/PlayerList;";
+                        methodInsnNode.itf = false;
+                        patched = true;
+                        continue;
+                    }
+
+                    if (methodInsnNode.getOpcode() == Opcodes.INVOKEVIRTUAL
+                            && "net/minecraft/server/MinecraftServer".equals(methodInsnNode.owner)
+                            && "bd".equals(methodInsnNode.name)
+                            && "()Lnet/minecraft/core/LayeredRegistryAccess;".equals(methodInsnNode.desc)) {
+                        methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                        methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                        methodInsnNode.name = "itemsAdderGetRegistriesCompat";
+                        methodInsnNode.desc = "(Lnet/minecraft/server/MinecraftServer;)Lnet/minecraft/core/LayeredRegistryAccess;";
+                        methodInsnNode.itf = false;
+                        patched = true;
+                        continue;
+                    }
+
+                    if (methodInsnNode.getOpcode() == Opcodes.INVOKEVIRTUAL
+                            && "net/minecraft/server/network/PlayerConnection".equals(methodInsnNode.owner)
+                            && "b".equals(methodInsnNode.name)
+                            && "(Lnet/minecraft/network/protocol/Packet;)V".equals(methodInsnNode.desc)) {
+                        methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                        methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                        methodInsnNode.name = "itemsAdderSendPacketCompat";
+                        methodInsnNode.desc = "(Ljava/lang/Object;Lnet/minecraft/network/protocol/Packet;)V";
+                        methodInsnNode.itf = false;
+                        patched = true;
+                        continue;
+                    }
+                }
+
+                if (insn instanceof FieldInsnNode fieldInsnNode
+                        && fieldInsnNode.getOpcode() == Opcodes.GETFIELD
+                        && "net/minecraft/server/players/PlayerList".equals(fieldInsnNode.owner)
+                        && "l".equals(fieldInsnNode.name)
+                        && "Ljava/util/List;".equals(fieldInsnNode.desc)) {
+                    MethodInsnNode replacement = new MethodInsnNode(
+                            Opcodes.INVOKESTATIC,
+                            Type.getInternalName(PluginFixManager.class),
+                            "itemsAdderGetPlayersCompat",
+                            "(Ljava/lang/Object;)Ljava/util/List;",
+                            false
+                    );
+                    methodNode.instructions.set(fieldInsnNode, replacement);
+                    patched = true;
+                }
+            }
+
+            if (patched) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    private static void fixCommandTimerWorldTimeTracking(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            boolean patched = false;
+
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (!(insn instanceof MethodInsnNode methodInsnNode)) {
+                    continue;
+                }
+
+                if ("me/playbosswar/com/CommandTimerPlugin".equals(methodInsnNode.owner)
+                        && "getScheduler".equals(methodInsnNode.name)
+                        && "()Lme/playbosswar/com/scheduler/SchedulerAdapter;".equals(methodInsnNode.desc)) {
+                    methodInsnNode.desc = "()Lme/playbosswar/com/reflections/SchedulerAdapter;";
+                    methodInsnNode.itf = false;
+                    patched = true;
+                    continue;
+                }
+
+                if ("me/playbosswar/com/scheduler/SchedulerAdapter".equals(methodInsnNode.owner)
+                        && "runTaskTimer".equals(methodInsnNode.name)
+                        && "(Ljava/lang/Runnable;JJ)Lorg/bukkit/scheduler/BukkitTask;".equals(methodInsnNode.desc)) {
+                    methodInsnNode.owner = "me/playbosswar/com/reflections/SchedulerAdapter";
+                    methodInsnNode.itf = true;
+                    patched = true;
+                }
+            }
+
+            if (patched) {
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
     private static void fixItemsAdderLibbyLibraryManager(ClassNode node) {
         for (MethodNode methodNode : node.methods) {
             if (!"resolveTransitiveLibraries".equals(methodNode.name)
@@ -2301,6 +2415,52 @@ public class PluginFixManager {
                 methodInsnNode.itf = false;
             }
             clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixRpgRegionsSoundCompat(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            boolean patched = false;
+
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (!(insn instanceof MethodInsnNode methodInsnNode)) {
+                    continue;
+                }
+                if (!"org/bukkit/Sound".equals(methodInsnNode.owner)) {
+                    continue;
+                }
+
+                if ("name".equals(methodInsnNode.name) && "()Ljava/lang/String;".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "rpgRegionsSoundNameCompat";
+                    methodInsnNode.desc = "(Ljava/lang/Object;)Ljava/lang/String;";
+                    methodInsnNode.itf = false;
+                    patched = true;
+                    continue;
+                }
+
+                if ("valueOf".equals(methodInsnNode.name) && "(Ljava/lang/String;)Lorg/bukkit/Sound;".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "rpgRegionsSoundValueOfCompat";
+                    methodInsnNode.itf = false;
+                    patched = true;
+                    continue;
+                }
+
+                if ("values".equals(methodInsnNode.name) && "()[Lorg/bukkit/Sound;".equals(methodInsnNode.desc)) {
+                    methodInsnNode.setOpcode(Opcodes.INVOKESTATIC);
+                    methodInsnNode.owner = Type.getInternalName(PluginFixManager.class);
+                    methodInsnNode.name = "rpgRegionsSoundValuesCompat";
+                    methodInsnNode.itf = false;
+                    patched = true;
+                }
+            }
+
+            if (patched) {
+                clearLocalDebugInfo(methodNode);
+            }
         }
     }
 
@@ -3232,30 +3392,86 @@ public class PluginFixManager {
 
     private static void fixMythicBukkitBootstrap(ClassNode node) {
         for (MethodNode methodNode : node.methods) {
-            if (!"createBossBar".equals(methodNode.name)) {
+            if ("createBossBar".equals(methodNode.name)
+                    && "(Ljava/lang/String;Lio/lumine/mythic/api/adapters/AbstractBossBar$BarColor;Lio/lumine/mythic/api/adapters/AbstractBossBar$BarStyle;)Lio/lumine/mythic/api/adapters/AbstractBossBar;".equals(methodNode.desc)) {
+                InsnList toInject = new InsnList();
+                toInject.add(new org.objectweb.asm.tree.TypeInsnNode(
+                        Opcodes.NEW,
+                        "io/lumine/mythic/bukkit/adapters/bossbars/BukkitBossBar"
+                ));
+                toInject.add(new InsnNode(Opcodes.DUP));
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 1));
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 2));
+                toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 3));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESPECIAL,
+                        "io/lumine/mythic/bukkit/adapters/bossbars/BukkitBossBar",
+                        "<init>",
+                        "(Ljava/lang/String;Lio/lumine/mythic/api/adapters/AbstractBossBar$BarColor;Lio/lumine/mythic/api/adapters/AbstractBossBar$BarStyle;)V",
+                        false
+                ));
+                toInject.add(new InsnNode(Opcodes.ARETURN));
+                methodNode.instructions = toInject;
+                methodNode.tryCatchBlocks.clear();
+                clearLocalDebugInfo(methodNode);
                 continue;
             }
-            if (!"(Ljava/lang/String;Lio/lumine/mythic/api/adapters/AbstractBossBar$BarColor;Lio/lumine/mythic/api/adapters/AbstractBossBar$BarStyle;)Lio/lumine/mythic/api/adapters/AbstractBossBar;".equals(methodNode.desc)) {
+
+            if (!"initializeMagicEntityValues".equals(methodNode.name) || !"()V".equals(methodNode.desc)) {
                 continue;
             }
+
             InsnList toInject = new InsnList();
-            toInject.add(new org.objectweb.asm.tree.TypeInsnNode(
-                    Opcodes.NEW,
-                    "io/lumine/mythic/bukkit/adapters/bossbars/BukkitBossBar"
-            ));
-            toInject.add(new InsnNode(Opcodes.DUP));
-            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 1));
-            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 2));
-            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 3));
+            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
             toInject.add(new MethodInsnNode(
-                    Opcodes.INVOKESPECIAL,
-                    "io/lumine/mythic/bukkit/adapters/bossbars/BukkitBossBar",
-                    "<init>",
-                    "(Ljava/lang/String;Lio/lumine/mythic/api/adapters/AbstractBossBar$BarColor;Lio/lumine/mythic/api/adapters/AbstractBossBar$BarStyle;)V",
+                    Opcodes.INVOKEVIRTUAL,
+                    "java/lang/Object",
+                    "getClass",
+                    "()Ljava/lang/Class;",
                     false
             ));
-            toInject.add(new InsnNode(Opcodes.ARETURN));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKEVIRTUAL,
+                    "java/lang/Class",
+                    "getClassLoader",
+                    "()Ljava/lang/ClassLoader;",
+                    false
+            ));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "initializeMythicMagicEntityValuesCompat",
+                    "(Ljava/lang/ClassLoader;)V",
+                    false
+            ));
+            toInject.add(new InsnNode(Opcodes.RETURN));
             methodNode.instructions = toInject;
+            methodNode.tryCatchBlocks.clear();
+            clearLocalDebugInfo(methodNode);
+        }
+    }
+
+    private static void fixMythicBabyZombieVillager(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"spawn".equals(methodNode.name)
+                    || !"(Lorg/bukkit/Location;Lio/lumine/mythic/api/mobs/entities/SpawnReason;Ljava/util/function/Consumer;)Lorg/bukkit/entity/Entity;".equals(methodNode.desc)) {
+                continue;
+            }
+
+            InsnList replacement = new InsnList();
+            replacement.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+            replacement.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 1));
+            replacement.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 2));
+            replacement.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 3));
+            replacement.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "mythicSpawnBabyZombieVillagerCompat",
+                    "(Ljava/lang/Object;Lorg/bukkit/Location;Ljava/lang/Object;Ljava/util/function/Consumer;)Lorg/bukkit/entity/Entity;",
+                    false
+            ));
+            replacement.add(new InsnNode(Opcodes.ARETURN));
+            methodNode.instructions = replacement;
             methodNode.tryCatchBlocks.clear();
             clearLocalDebugInfo(methodNode);
         }
@@ -4591,6 +4807,33 @@ public class PluginFixManager {
             if (methodNode.desc.contains("/paper/event/")) {
                 iterator.remove();
             }
+        }
+    }
+
+    private static void fixLibreforgeLoaderDoFetchConfigs(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"doFetchConfigs".equals(methodNode.name)
+                    || methodNode.desc == null
+                    || !methodNode.desc.startsWith("(L")
+                    || !methodNode.desc.endsWith("Ljava/util/Set;")) {
+                continue;
+            }
+
+            InsnList toInject = new InsnList();
+            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 0));
+            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 1));
+            toInject.add(new org.objectweb.asm.tree.VarInsnNode(Opcodes.ALOAD, 2));
+            toInject.add(new MethodInsnNode(
+                    Opcodes.INVOKESTATIC,
+                    Type.getInternalName(PluginFixManager.class),
+                    "libreforgeDoFetchConfigsCompat",
+                    "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)Ljava/util/Set;",
+                    false
+            ));
+            toInject.add(new InsnNode(Opcodes.ARETURN));
+            methodNode.instructions = toInject;
+            methodNode.tryCatchBlocks.clear();
+            clearLocalDebugInfo(methodNode);
         }
     }
 
@@ -6296,6 +6539,101 @@ public class PluginFixManager {
         }
     }
 
+    public static void initializeMythicMagicEntityValuesCompat(ClassLoader classLoader) {
+        if (classLoader == null) {
+            return;
+        }
+
+        try {
+            Class<?> mythicEntityTypeClass = Class.forName("io.lumine.mythic.api.mobs.entities.MythicEntityType", true, classLoader);
+            Method valuesMethod = mythicEntityTypeClass.getMethod("values");
+            valuesMethod.setAccessible(true);
+            Object valuesObj = valuesMethod.invoke(null);
+            if (!(valuesObj instanceof Object[] values)) {
+                return;
+            }
+
+            Object custom = null;
+            try {
+                Field customField = mythicEntityTypeClass.getField("CUSTOM");
+                customField.setAccessible(true);
+                custom = customField.get(null);
+            } catch (Throwable ignored) {
+            }
+
+            Method initializeDefaultValuesMethod = mythicEntityTypeClass.getMethod("initializeDefaultValues");
+            initializeDefaultValuesMethod.setAccessible(true);
+            for (Object value : values) {
+                if (value == null || value == custom) {
+                    continue;
+                }
+
+                try {
+                    initializeDefaultValuesMethod.invoke(value);
+                } catch (java.lang.reflect.InvocationTargetException ex) {
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    if (shouldSuppressMythicMagicEntityInitFailure(value, cause)) {
+                        continue;
+                    }
+                    logMythicMagicEntityInitFailure(classLoader, cause);
+                } catch (Throwable throwable) {
+                    if (shouldSuppressMythicMagicEntityInitFailure(value, throwable)) {
+                        continue;
+                    }
+                    logMythicMagicEntityInitFailure(classLoader, throwable);
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+    }
+
+    public static org.bukkit.entity.Entity mythicSpawnBabyZombieVillagerCompat(
+            Object mythicEntityObj,
+            org.bukkit.Location location,
+            Object spawnReasonObj,
+            java.util.function.Consumer<org.bukkit.entity.Entity> consumer
+    ) {
+        if (mythicEntityObj == null || location == null || spawnReasonObj == null) {
+            return null;
+        }
+
+        try {
+            Class<?> baseType = mythicEntityObj.getClass().getSuperclass();
+            Method spawnEntityMethod = resolveDeclaredMethodCompat(
+                    baseType,
+                    "spawnEntity",
+                    new Class<?>[]{org.bukkit.Location.class, org.bukkit.entity.EntityType.class, spawnReasonObj.getClass(), java.util.function.Consumer.class}
+            );
+            spawnEntityMethod.setAccessible(true);
+            Object spawned = spawnEntityMethod.invoke(
+                    mythicEntityObj,
+                    location,
+                    org.bukkit.entity.EntityType.ZOMBIE_VILLAGER,
+                    spawnReasonObj,
+                    consumer
+            );
+            if (!(spawned instanceof org.bukkit.entity.ZombieVillager zombieVillager)) {
+                return spawned instanceof org.bukkit.entity.Entity entity ? entity : null;
+            }
+
+            zombieVillager.setBaby(true);
+
+            Object professionObj = readDeclaredFieldCompat(mythicEntityObj.getClass(), mythicEntityObj, "villagerProfession");
+            if (professionObj instanceof org.bukkit.entity.Villager.Profession profession) {
+                zombieVillager.setVillagerProfession(profession);
+            }
+
+            Object villagerTypeObj = readDeclaredFieldCompat(mythicEntityObj.getClass(), mythicEntityObj, "villagerType");
+            if (villagerTypeObj instanceof org.bukkit.entity.Villager.Type villagerType) {
+                zombieVillager.setVillagerType(villagerType);
+            }
+
+            return zombieVillager;
+        } catch (Throwable throwable) {
+            throw new IllegalStateException("Could not spawn MythicMobs baby zombie villager", throwable);
+        }
+    }
+
     public static void loadZapperDependenciesCompat(Object dependencyManager) {
         if (dependencyManager == null) {
             return;
@@ -6745,6 +7083,209 @@ public class PluginFixManager {
                 }
             }
         });
+    }
+
+    public static String rpgRegionsSoundNameCompat(Object soundObj) {
+        if (soundObj == null) {
+            return null;
+        }
+        if (soundObj instanceof Enum<?> enumValue) {
+            return enumValue.name();
+        }
+        return String.valueOf(soundObj);
+    }
+
+    public static org.bukkit.Sound rpgRegionsSoundValueOfCompat(String name) {
+        return org.bukkit.Sound.valueOf(name);
+    }
+
+    public static org.bukkit.Sound[] rpgRegionsSoundValuesCompat() {
+        return org.bukkit.Sound.values();
+    }
+
+    public static net.minecraft.server.players.PlayerList itemsAdderGetPlayerListCompat(MinecraftServer server) {
+        if (server == null) {
+            return null;
+        }
+        return server.getPlayerList();
+    }
+
+    public static net.minecraft.core.LayeredRegistryAccess<?> itemsAdderGetRegistriesCompat(MinecraftServer server) {
+        if (server == null) {
+            return null;
+        }
+        return server.registries();
+    }
+
+    public static java.util.List<?> itemsAdderGetPlayersCompat(Object playerList) {
+        if (playerList == null) {
+            return java.util.Collections.emptyList();
+        }
+        if (playerList instanceof net.minecraft.server.players.PlayerList list) {
+            return list.getPlayers();
+        }
+
+        Object direct = invokeNoArgs(playerList, "getPlayers", "m_11314_");
+        if (direct instanceof java.util.List<?> list) {
+            return list;
+        }
+
+        for (String fieldName : new String[]{"players", "f_11196_", "k", "l"}) {
+            try {
+                Field field = findFieldByNameCompat(playerList.getClass(), fieldName);
+                if (field == null) {
+                    continue;
+                }
+                field.setAccessible(true);
+                Object value = field.get(playerList);
+                if (value instanceof java.util.List<?> list) {
+                    return list;
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+
+        return java.util.Collections.emptyList();
+    }
+
+    public static void itemsAdderSendPacketCompat(Object connection, net.minecraft.network.protocol.Packet<?> packet) {
+        if (connection == null || packet == null) {
+            return;
+        }
+        if (connection instanceof net.minecraft.server.network.ServerPlayerConnection sender) {
+            sender.send(packet);
+            return;
+        }
+
+        Method method = findMethodCompat(connection.getClass(), "send", net.minecraft.network.protocol.Packet.class);
+        if (method == null) {
+            method = findMethodCompat(connection.getClass(), "a", net.minecraft.network.protocol.Packet.class);
+        }
+        if (method == null) {
+            method = findMethodCompat(connection.getClass(), "b", net.minecraft.network.protocol.Packet.class);
+        }
+        if (method == null) {
+            throw new IllegalStateException("Could not resolve packet send method for ItemsAdder");
+        }
+
+        try {
+            method.invoke(connection, packet);
+        } catch (Throwable throwable) {
+            throw new IllegalStateException("Could not send ItemsAdder packet", throwable);
+        }
+    }
+
+    private static boolean shouldSuppressMythicMagicEntityInitFailure(Object mythicEntityType, Throwable throwable) {
+        Throwable root = throwable;
+        while (root != null && root.getCause() != null && root.getCause() != root) {
+            root = root.getCause();
+        }
+
+        if (!(root instanceof IllegalArgumentException)) {
+            return false;
+        }
+
+        String message = root.getMessage();
+        if (message == null) {
+            return false;
+        }
+
+        if ("Villager.Profession cannot be null".equals(message) || "Villager.Type cannot be null".equals(message)) {
+            return true;
+        }
+        if ("Entity class cannot be null".equals(message)) {
+            return true;
+        }
+        if (message.startsWith("Cannot spawn an entity for ")) {
+            return true;
+        }
+
+        String typeName = mythicEntityType instanceof Enum<?> enumValue ? enumValue.name() : String.valueOf(mythicEntityType);
+        return "ZOMBIE_NAUTILUS".equals(typeName) || "NAUTILUS".equals(typeName);
+    }
+
+    private static void logMythicMagicEntityInitFailure(ClassLoader classLoader, Throwable throwable) {
+        try {
+            Class<?> mythicLoggerClass = Class.forName("io.lumine.mythic.core.logging.MythicLogger", true, classLoader);
+            Method errorMethod = mythicLoggerClass.getMethod("error", String.class);
+            errorMethod.setAccessible(true);
+            errorMethod.invoke(null, "Error initializing default entity magic values. Please report this.");
+        } catch (Throwable ignored) {
+            org.bukkit.Bukkit.getLogger().warning("[MythicMobs] Error initializing default entity magic values. Please report this.");
+        }
+
+        if (throwable != null) {
+            throwable.printStackTrace();
+        }
+    }
+
+    public static java.util.Set<?> libreforgeDoFetchConfigsCompat(Object pluginObj, Object categoryObj, String directory) {
+        java.util.Set<Object> results = new java.util.LinkedHashSet<>();
+        if (pluginObj == null || categoryObj == null || directory == null || directory.isBlank()) {
+            return results;
+        }
+
+        try {
+            Object dataFolderObj = invokeNoArgs(pluginObj, "getDataFolder");
+            if (!(dataFolderObj instanceof java.io.File dataFolder)) {
+                return results;
+            }
+
+            java.io.File root = new java.io.File(dataFolder, directory);
+            if (!root.exists()) {
+                return results;
+            }
+
+            ClassLoader loader = categoryObj.getClass().getClassLoader();
+            if (loader == null) {
+                return results;
+            }
+
+            Class<?> configExtensionsClass = Class.forName("com.willfp.eco.core.config.ConfigExtensions", true, loader);
+            Method readConfigMethod = configExtensionsClass.getMethod("readConfig", java.io.File.class);
+            readConfigMethod.setAccessible(true);
+
+            Class<?> registrableConfigClass = Class.forName(
+                    categoryObj.getClass().getPackageName().replace(".configs", ".internal.configs") + ".RegistrableConfig",
+                    true,
+                    loader
+            );
+
+            Constructor<?> constructor = null;
+            for (Constructor<?> candidate : registrableConfigClass.getDeclaredConstructors()) {
+                if (candidate.getParameterCount() == 4) {
+                    constructor = candidate;
+                    break;
+                }
+            }
+            if (constructor == null) {
+                return results;
+            }
+            constructor.setAccessible(true);
+            final Constructor<?> registrableConfigConstructor = constructor;
+
+            try (java.util.stream.Stream<java.nio.file.Path> stream = java.nio.file.Files.walk(root.toPath())) {
+                stream.filter(java.nio.file.Files::isRegularFile)
+                        .map(java.nio.file.Path::toFile)
+                        .filter(file -> {
+                            String name = file.getName();
+                            return name.endsWith(".yml") && !name.startsWith("_");
+                        })
+                        .forEach(file -> {
+                            try {
+                                Object config = readConfigMethod.invoke(null, file);
+                                String name = file.getName();
+                                String id = name.endsWith(".yml") ? name.substring(0, name.length() - 4) : name;
+                                Object registrableConfig = registrableConfigConstructor.newInstance(config, file, id, categoryObj);
+                                results.add(registrableConfig);
+                            } catch (Throwable ignored) {
+                            }
+                        });
+            }
+        } catch (Throwable ignored) {
+        }
+
+        return results;
     }
 
     private static void clearLocalDebugInfo(MethodNode methodNode) {
