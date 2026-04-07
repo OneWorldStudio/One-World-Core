@@ -20,6 +20,7 @@ import com.mojang.serialization.Lifecycle;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,8 +70,11 @@ import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.TagEntry;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.CrudeIncrementalIntIdentityHashBiMap;
@@ -110,6 +114,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackLinkedSet;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PotionItem;
+import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.Tiers;
 import net.minecraft.world.item.TippedArrowItem;
@@ -300,8 +305,87 @@ public class ForgeHooks
 
     public static float onLivingHurt(LivingEntity entity, DamageSource src, float amount)
     {
+        amount = applyShieldBlockCompat(entity, src, amount);
         LivingHurtEvent event = new LivingHurtEvent(entity, src, amount);
         return (MinecraftForge.EVENT_BUS.post(event) ? 0 : event.getAmount());
+    }
+
+    // EpicFight can skip the normal shield flow on hybrid servers, so emulate the
+    // modded shield fix directly before the LivingHurtEvent bus dispatch.
+    private static float applyShieldBlockCompat(LivingEntity entity, DamageSource source, float amount)
+    {
+        if (!(entity instanceof Player player) || amount <= 0.0F || source.is(DamageTypeTags.BYPASSES_SHIELD))
+            return amount;
+        if (!player.isUsingItem())
+            return amount;
+
+        ItemStack using = player.getUseItem();
+        if (using.isEmpty() || !(using.getItem() instanceof ShieldItem))
+            return amount;
+
+        Vec3 sourcePos = getShieldBlockSourcePositionCompat(source);
+        if (sourcePos == null || !isShieldBlockSourceInFrontCompat(player, sourcePos))
+            return amount;
+
+        int shieldDamage = Math.max(1, Math.round(amount));
+        using.hurtAndBreak(shieldDamage, player, brokenPlayer -> brokenPlayer.broadcastBreakEvent(player.getUsedItemHand()));
+        player.level().playSound(
+                null,
+                player.getX(),
+                player.getY(),
+                player.getZ(),
+                SoundEvents.SHIELD_BLOCK,
+                SoundSource.PLAYERS,
+                1.0F,
+                0.8F + player.getRandom().nextFloat() * 0.4F
+        );
+        return 0.0F;
+    }
+
+    private static boolean isShieldBlockSourceInFrontCompat(Player player, Vec3 sourcePos)
+    {
+        Vec3 view = player.getViewVector(1.0F);
+        Vec3 delta = sourcePos.subtract(player.position());
+        delta = new Vec3(delta.x, 0.0D, delta.z);
+        if (delta.lengthSqr() < 1.0E-7D)
+            return false;
+        return view.dot(delta.normalize()) > 0.0D;
+    }
+
+    private static Vec3 getShieldBlockSourcePositionCompat(DamageSource source)
+    {
+        Vec3 sourcePos = invokeDamageSourcePositionCompat(source);
+        if (sourcePos != null)
+            return sourcePos;
+
+        Entity direct = source.getDirectEntity();
+        if (direct != null)
+            return direct.position();
+
+        Entity attacker = source.getEntity();
+        return attacker != null ? attacker.position() : null;
+    }
+
+    private static Vec3 invokeDamageSourcePositionCompat(DamageSource source)
+    {
+        try
+        {
+            Method method = source.getClass().getMethod("getSourcePosition");
+            Object result = method.invoke(source);
+            if (result instanceof Vec3 vec3)
+                return vec3;
+            if (result instanceof Optional<?> optional)
+            {
+                Object value = optional.orElse(null);
+                if (value instanceof Vec3 vec3)
+                    return vec3;
+            }
+        }
+        catch (ReflectiveOperationException ignored)
+        {
+        }
+
+        return null;
     }
 
     public static float onLivingDamage(LivingEntity entity, DamageSource src, float amount)
