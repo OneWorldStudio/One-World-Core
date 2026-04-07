@@ -1,0 +1,75 @@
+name: Discord Notifications
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Build Discord payload
+        id: payload
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+
+          with open(os.environ["GITHUB_EVENT_PATH"], "r", encoding="utf-8") as f:
+              event = json.load(f)
+
+          repo = os.environ["GITHUB_REPOSITORY"]
+          branch = os.environ["GITHUB_REF_NAME"]
+          actor = os.environ["GITHUB_ACTOR"]
+          commits = event.get("commits", [])
+          compare_url = event.get("compare", f"https://github.com/{repo}")
+
+          lines = []
+          for c in commits[:5]:
+              msg = (c.get("message") or "").split("\n")[0].strip() or "(no message)"
+              short_id = (c.get("id") or "")[:7]
+              url = c.get("url") or f"https://github.com/{repo}"
+              author = c.get("author", {}).get("name", "unknown")
+              lines.append(f"[`{short_id}`]({url}) {msg} — **{author}**")
+
+          if len(commits) > 5:
+              lines.append(f"...and **{len(commits) - 5}** more commit(s)")
+
+          payload = {
+              "username": "GitHub",
+              "embeds": [
+                  {
+                      "title": f"📦 {repo}",
+                      "url": compare_url,
+                      "description": "\n".join(lines) if lines else "Push received.",
+                      "fields": [
+                          {"name": "Branch", "value": f"`{branch}`", "inline": True},
+                          {"name": "Pushed by", "value": actor, "inline": True},
+                          {"name": "Commits", "value": str(len(commits)), "inline": True}
+                      ],
+                      "footer": {"text": "GitHub Actions → Discord"}
+                  }
+              ]
+          }
+
+          with open("discord-payload.json", "w", encoding="utf-8") as out:
+              json.dump(payload, out, ensure_ascii=False)
+          PY
+
+      - name: Send to Discord with curl
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl --fail-with-body \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: GitHubActions-Discord-Webhook" \
+            -X POST \
+            --data @discord-payload.json \
+            "$DISCORD_WEBHOOK"
