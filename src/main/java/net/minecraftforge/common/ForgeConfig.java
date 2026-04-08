@@ -75,7 +75,7 @@ public class ForgeConfig {
             advertiseDedicatedServerToLan = builder
                     .comment("Set this to true to enable advertising the dedicated server to local LAN clients so that it shows up in the Multiplayer screen automatically.")
                     .translation("forge.configgui.advertiseDedicatedServerToLan")
-                    .define("advertiseDedicatedServerToLan", true);
+                    .define("advertiseDedicatedServerToLan", false);
 
             useItemWithDurationZero = builder
                     .comment("Set this to true to enable living entities to use items with durations of 0. Fixes being able to use Eyes of Ender repeatedly by holding down the use button. Disabled by default as it could change interactions with items of existing mods.")
@@ -233,4 +233,3 @@ public class ForgeConfig {
     //public static boolean logCascadingWorldGeneration = true; // see Chunk#logCascadingWorldGeneration()
     //public static boolean fixVanillaCascading = false;
 }
-
