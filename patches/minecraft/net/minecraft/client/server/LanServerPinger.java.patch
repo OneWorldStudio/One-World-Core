@@ -9,12 +9,22 @@
     public static final int f_174975_ = 4445;
     private static final long f_174976_ = 1500L;
     private final String f_120103_;
-@@ -36,7 +_,7 @@
+@@ -36,17 +_,2 @@
  
-       while(!this.isInterrupted() && this.f_120105_) {
-          try {
+-      while(!this.isInterrupted() && this.f_120105_) {
+-         try {
 -            InetAddress inetaddress = InetAddress.getByName("224.0.2.60");
-+            InetAddress inetaddress = InetAddress.getByName(f_174974_);
-             DatagramPacket datagrampacket = new DatagramPacket(abyte, abyte.length, inetaddress, 4445);
-             this.f_120104_.send(datagrampacket);
-          } catch (IOException ioexception) {
+-            DatagramPacket datagrampacket = new DatagramPacket(abyte, abyte.length, inetaddress, 4445);
+-            this.f_120104_.send(datagrampacket);
+-         } catch (IOException ioexception) {
+-            f_120102_.warn("LanServerPinger: {}", (Object)ioexception.getMessage());
+-            break;
+-         }
+-
+-         try {
+-            sleep(1500L);
+-         } catch (InterruptedException interruptedexception) {
+-         }
+-      }
++      this.f_120105_ = false;
++      this.f_120104_.close();
