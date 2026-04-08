@@ -1,5 +1,6 @@
 package org.bukkit.entity;
 
+import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
 public interface Tameable extends Animals {
@@ -32,6 +33,17 @@ public interface Tameable extends Animals {
      */
     @Nullable
     public AnimalTamer getOwner();
+
+    /**
+     * Gets the UUID of the current owning AnimalTamer.
+     *
+     * @return the owning AnimalTamer UUID, or null if not owned
+     */
+    @Nullable
+    public default UUID getOwnerUniqueId() {
+        AnimalTamer owner = this.getOwner();
+        return owner != null ? owner.getUniqueId() : null;
+    }
 
     /**
      * Set this to be owned by given AnimalTamer.
