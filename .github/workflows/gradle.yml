@@ -39,18 +39,10 @@ jobs:
             Set-Content gradle.properties -Encoding ASCII
           "JAVA_HOME=$env:JAVA_HOME"
 
-      - name: Set CI core version
-        shell: pwsh
-        run: |
-          @(
-            '#OneWorldCore GitHub Actions build version'
-            "coreVersion=20.2.1.${env:GITHUB_RUN_NUMBER}"
-          ) | Set-Content -Path core-version.properties -Encoding ASCII
-          Get-Content core-version.properties
-
       - name: Build OneWorldCore jar
         shell: pwsh
         run: |
+          Get-Content core-version.properties
           .\gradlew.bat :oneworldstudio:oneworldcoreJar --stacktrace --no-daemon
 
       - name: Upload OneWorldCore jar
