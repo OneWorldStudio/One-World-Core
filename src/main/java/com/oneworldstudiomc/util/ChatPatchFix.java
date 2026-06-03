@@ -163,6 +163,11 @@ public class ChatPatchFix {
             viewers.addAll(recipients);
         }
 
+        if (!originalFormat.equals(format) || !originalMessage.equals(message)) {
+            sendLegacyFormattedChat(source, format, message, viewers);
+            return;
+        }
+
         Component sourceDisplayName = LEGACY.deserialize(source.getDisplayName());
         Component messageComponent = LEGACY.deserialize(message);
         io.papermc.paper.event.player.AsyncChatEvent paperEvent = new io.papermc.paper.event.player.AsyncChatEvent(
@@ -193,6 +198,19 @@ public class ChatPatchFix {
 
         Audience console = Bukkit.getConsoleSender();
         console.sendMessage(paperEvent.renderer().render(source, sourceDisplayName, paperEvent.message(), console));
+    }
+
+    private static void sendLegacyFormattedChat(
+            org.bukkit.entity.Player source,
+            String format,
+            String message,
+            Set<Audience> viewers
+    ) {
+        Component formatted = LEGACY.deserialize(renderLegacyChatFormat(format, source.getName(), source.getDisplayName(), message));
+        for (Audience viewer : viewers) {
+            viewer.sendMessage(formatted);
+        }
+        Bukkit.getConsoleSender().sendMessage(formatted);
     }
 
     private static String renderLegacyChatFormat(String format, String playerName, String displayName, String message) {
