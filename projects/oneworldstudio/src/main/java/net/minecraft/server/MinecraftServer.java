@@ -455,8 +455,29 @@ public abstract class MinecraftServer extends ReentrantBlockableEventLoop<TickTa
       }
 
       this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
+      this.replayLoadedEntityEventsForPostWorldPlugins();
       this.server.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.STARTUP));
       this.connection.acceptConnections();
+   }
+
+   private void replayLoadedEntityEventsForPostWorldPlugins() {
+      if (org.bukkit.event.world.EntitiesLoadEvent.getHandlerList().getRegisteredListeners().length == 0) {
+         return;
+      }
+
+      for (org.bukkit.World bukkitWorld : this.server.getWorlds()) {
+         for (org.bukkit.Chunk chunk : bukkitWorld.getLoadedChunks()) {
+            org.bukkit.entity.Entity[] entities = chunk.getEntities();
+            if (entities.length == 0) {
+               continue;
+            }
+
+            org.bukkit.Bukkit.getPluginManager().callEvent(new org.bukkit.event.world.EntitiesLoadEvent(
+                    chunk,
+                    java.util.Collections.unmodifiableList(java.util.Arrays.asList(entities))
+            ));
+         }
+      }
    }
 
    private static void setInitialSpawn(ServerLevel p_177897_, ServerLevelData p_177898_, boolean p_177899_, boolean p_177900_) {

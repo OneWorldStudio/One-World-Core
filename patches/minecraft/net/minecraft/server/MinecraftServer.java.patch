@@ -181,7 +181,7 @@
        if (!serverleveldata.m_6535_()) {
           try {
              m_177896_(serverlevel, serverleveldata, worldoptions.m_245100_(), flag);
-@@ -373,13 +_,39 @@
+@@ -373,13 +_,60 @@
           if (resourcekey != LevelStem.f_63971_) {
              ResourceKey<Level> resourcekey1 = ResourceKey.m_135785_(Registries.f_256858_, resourcekey.m_135782_());
              DerivedLevelData derivedleveldata = new DerivedLevelData(this.f_129749_, serverleveldata);
@@ -217,9 +217,30 @@
 +      }
 +
 +      this.server.enablePlugins(org.bukkit.plugin.PluginLoadOrder.POSTWORLD);
++      this.replayLoadedEntityEventsForPostWorldPlugins();
 +      this.server.getPluginManager().callEvent(new ServerLoadEvent(ServerLoadEvent.LoadType.STARTUP));
 +      this.f_129755_.acceptConnections();
     }
++
++   private void replayLoadedEntityEventsForPostWorldPlugins() {
++      if (org.bukkit.event.world.EntitiesLoadEvent.getHandlerList().getRegisteredListeners().length == 0) {
++         return;
++      }
++
++      for (org.bukkit.World bukkitWorld : this.server.getWorlds()) {
++         for (org.bukkit.Chunk chunk : bukkitWorld.getLoadedChunks()) {
++            org.bukkit.entity.Entity[] entities = chunk.getEntities();
++            if (entities.length == 0) {
++               continue;
++            }
++
++            org.bukkit.Bukkit.getPluginManager().callEvent(new org.bukkit.event.world.EntitiesLoadEvent(
++                    chunk,
++                    java.util.Collections.unmodifiableList(java.util.Arrays.asList(entities))
++            ));
++         }
++      }
++   }
  
     private static void m_177896_(ServerLevel p_177897_, ServerLevelData p_177898_, boolean p_177899_, boolean p_177900_) {
 @@ -387,7 +_,23 @@
