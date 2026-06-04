@@ -630,6 +630,20 @@ public interface World extends RegionAccessor, WorldInfo, PluginMessageRecipient
     @NotNull
     public <T extends AbstractArrow> T spawnArrow(@NotNull Location location, @NotNull Vector direction, float speed, float spread, @NotNull Class<T> clazz);
 
+    // Paper compatibility - prefer java.util.function.Consumer
+    @NotNull
+    default <T extends Entity> T spawn(@NotNull Location location, @NotNull Class<T> clazz, @Nullable java.util.function.Consumer<T> function) throws IllegalArgumentException {
+        final org.bukkit.util.Consumer<T> bukkitConsumer = function == null ? null : (org.bukkit.util.Consumer<T>) function::accept;
+        return this.spawn(location, clazz, bukkitConsumer);
+    }
+
+    // Paper compatibility - prefer java.util.function.Consumer
+    @NotNull
+    default <T extends Entity> T spawn(@NotNull Location location, @NotNull Class<T> clazz, boolean randomizeData, @Nullable java.util.function.Consumer<T> function) throws IllegalArgumentException {
+        final org.bukkit.util.Consumer<T> bukkitConsumer = function == null ? null : (org.bukkit.util.Consumer<T>) function::accept;
+        return this.spawn(location, clazz, randomizeData, bukkitConsumer);
+    }
+
     /**
      * Creates a tree at the given {@link Location}
      *

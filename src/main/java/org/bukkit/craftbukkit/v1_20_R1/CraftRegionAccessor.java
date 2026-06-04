@@ -424,7 +424,8 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
         if (function != null) {
             return addEntity(function.apply(location), CreatureSpawnEvent.SpawnReason.CUSTOM, null, false);
         }
-        return spawn(location, entityType.getEntityClass());
+        Class<? extends Entity> entityClass = entityType.getEntityClass();
+        return entityClass == null ? null : spawn(location, entityClass);
     }
 
     @Override
@@ -438,7 +439,8 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
         if (function != null) {
             return addEntity(function.apply(loc), CreatureSpawnEvent.SpawnReason.CUSTOM, null, randomizeData);
         }
-        return spawn(loc, type.getEntityClass(), null, CreatureSpawnEvent.SpawnReason.CUSTOM, randomizeData);
+        Class<? extends Entity> entityClass = type.getEntityClass();
+        return entityClass == null ? null : spawn(loc, entityClass, null, CreatureSpawnEvent.SpawnReason.CUSTOM, randomizeData);
     }
 
     @Override
@@ -447,7 +449,8 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
         if (function != null) {
             return addEntity(function.apply(loc), reason, null, randomizeData);
         }
-        return spawn(loc, type, type.getEntityClass(), null, reason, randomizeData);
+        Class<? extends Entity> entityClass = type.getEntityClass();
+        return entityClass == null ? null : spawn(loc, type, entityClass, null, reason, randomizeData);
     }
 
     @Override
