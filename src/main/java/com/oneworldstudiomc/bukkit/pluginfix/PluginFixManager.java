@@ -7126,8 +7126,6 @@ public class PluginFixManager {
             return title;
         }
 
-        double phase = ((System.currentTimeMillis() / 80L) % 200L) / 100.0D - 1.0D;
-        String phaseText = String.format(java.util.Locale.ROOT, "%.2f", phase);
         StringBuilder result = new StringBuilder(title.length() + 8);
         int cursor = 0;
 
@@ -7146,14 +7144,14 @@ public class PluginFixManager {
 
             result.append(title, cursor, start);
             String tag = title.substring(start + 1, end);
-            result.append('<').append(withAnimatedGradientPhaseCompat(tag, phaseText)).append('>');
+            result.append('<').append(withAnimatedGradientColorsCompat(tag)).append('>');
             cursor = end + 1;
         }
 
         return result.toString();
     }
 
-    private static String withAnimatedGradientPhaseCompat(String tag, String phaseText) {
+    private static String withAnimatedGradientColorsCompat(String tag) {
         String prefix = "gradient:";
         if (!tag.regionMatches(true, 0, prefix, 0, prefix.length())) {
             return tag;
@@ -7162,9 +7160,34 @@ public class PluginFixManager {
         String body = tag.substring(prefix.length());
         String[] parts = body.split(":");
         if (parts.length >= 3 && isGradientPhaseCompat(parts[parts.length - 1])) {
-            body = body.substring(0, body.length() - parts[parts.length - 1].length() - 1);
+            parts = java.util.Arrays.copyOf(parts, parts.length - 1);
         }
-        return prefix + body + ":" + phaseText;
+        if (parts.length < 2) {
+            return tag;
+        }
+
+        int[] colors = new int[parts.length];
+        for (int index = 0; index < parts.length; index++) {
+            Integer color = parseGradientHexColorCompat(parts[index]);
+            if (color == null) {
+                return prefix + String.join(":", parts);
+            }
+            colors[index] = color;
+        }
+
+        double blend = ((Math.sin(System.currentTimeMillis() / 450.0D) + 1.0D) / 2.0D) * 0.35D;
+        StringBuilder animated = new StringBuilder(prefix);
+        for (int index = 0; index < colors.length; index++) {
+            if (index > 0) {
+                animated.append(':');
+            }
+            animated.append(formatGradientHexColorCompat(blendGradientColorCompat(
+                    colors[index],
+                    colors[(index + 1) % colors.length],
+                    blend
+            )));
+        }
+        return animated.toString();
     }
 
     private static boolean isGradientPhaseCompat(String value) {
@@ -7177,6 +7200,34 @@ public class PluginFixManager {
         } catch (NumberFormatException ignored) {
             return false;
         }
+    }
+
+    private static Integer parseGradientHexColorCompat(String value) {
+        if (value == null || value.length() != 7 || value.charAt(0) != '#') {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value.substring(1), 16);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    private static int blendGradientColorCompat(int from, int to, double amount) {
+        int fromRed = (from >> 16) & 0xFF;
+        int fromGreen = (from >> 8) & 0xFF;
+        int fromBlue = from & 0xFF;
+        int toRed = (to >> 16) & 0xFF;
+        int toGreen = (to >> 8) & 0xFF;
+        int toBlue = to & 0xFF;
+        int red = (int) Math.round(fromRed + (toRed - fromRed) * amount);
+        int green = (int) Math.round(fromGreen + (toGreen - fromGreen) * amount);
+        int blue = (int) Math.round(fromBlue + (toBlue - fromBlue) * amount);
+        return (red << 16) | (green << 8) | blue;
+    }
+
+    private static String formatGradientHexColorCompat(int color) {
+        return String.format(java.util.Locale.ROOT, "#%06X", color & 0xFFFFFF);
     }
 
     public static org.bukkit.entity.Entity mythicApplyHuskOptionsCompat(Object mythicHusk, org.bukkit.entity.Entity entity) {
