@@ -89,6 +89,10 @@ public class Endermite extends Monster {
    public void tick() {
       this.yBodyRot = this.getYRot();
       super.tick();
+      if (!this.level().isClientSide && this.getNavigation().isDone() && this.getLookControl().isLookingAtTarget()) {
+         this.setYRot(this.yHeadRot);
+         this.yBodyRot = this.yHeadRot;
+      }
    }
 
    public void setYBodyRot(float p_32621_) {
