@@ -504,6 +504,7 @@ public final class CraftServer implements Server {
     }
 
     public void disablePlugins() {
+        org.bukkit.craftbukkit.v1_20_R1.scheduler.CraftScheduler.allowDisabledPluginTasksDuringShutdown();
         pluginManager.disablePlugins();
     }
 

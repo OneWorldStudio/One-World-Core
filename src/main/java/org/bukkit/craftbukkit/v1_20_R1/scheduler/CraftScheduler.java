@@ -110,6 +110,7 @@ public class CraftScheduler implements BukkitScheduler {
     private static final int RECENT_TICKS;
     private static final long DUPLICATE_SYNC_EXCEPTION_WINDOW_MILLIS = 30_000L;
     private static final int MAX_SYNC_EXCEPTION_TRACKING = 4096;
+    private static volatile long disabledPluginTaskGraceUntilMillis;
     private final ConcurrentHashMap<String, Long> syncExceptionLastLogged = new ConcurrentHashMap<String, Long>();
     private final ConcurrentHashMap<String, Integer> syncExceptionSuppressed = new ConcurrentHashMap<String, Integer>();
 
@@ -200,6 +201,9 @@ public class CraftScheduler implements BukkitScheduler {
     }
 
     public BukkitTask runTaskTimer(Plugin plugin, Object runnable, long delay, long period) {
+        if (shouldDropDisabledPluginTask(plugin, runnable)) {
+            return disabledPluginNoOpTask(plugin, runnable);
+        }
         validate(plugin, runnable);
         if (delay < 0L) {
             delay = 0;
@@ -224,6 +228,9 @@ public class CraftScheduler implements BukkitScheduler {
     }
 
     public BukkitTask runTaskTimerAsynchronously(Plugin plugin, Object runnable, long delay, long period) {
+        if (shouldDropDisabledPluginTask(plugin, runnable)) {
+            return disabledPluginNoOpTask(plugin, runnable);
+        }
         validate(plugin, runnable);
         if (delay < 0L) {
             delay = 0;
@@ -524,6 +531,23 @@ public class CraftScheduler implements BukkitScheduler {
         task.setNextRun(currentTick + delay);
         addTask(task);
         return task;
+    }
+
+    public static void allowDisabledPluginTasksDuringShutdown() {
+        disabledPluginTaskGraceUntilMillis = System.currentTimeMillis() + 30_000L;
+    }
+
+    private static boolean shouldDropDisabledPluginTask(final Plugin plugin, final Object task) {
+        return plugin != null
+                && task != null
+                && !plugin.isEnabled()
+                && System.currentTimeMillis() <= disabledPluginTaskGraceUntilMillis;
+    }
+
+    private static CraftTask disabledPluginNoOpTask(final Plugin plugin, final Object task) {
+        CraftTask craftTask = new CraftTask(plugin, task, -1, CraftTask.CANCEL);
+        craftTask.setNextRun(CraftTask.CANCEL);
+        return craftTask;
     }
 
     private static void validate(final Plugin plugin, final Object task) {
