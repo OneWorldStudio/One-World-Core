@@ -49,6 +49,7 @@ public final class OneWorldUpdater {
         migrateLegacyConfig();
         YamlConfiguration config = YamlConfiguration.loadConfiguration(CONFIG_PATH.toFile());
         config.addDefault("enabled", true);
+        config.addDefault("auto-apply", true);
         config.addDefault("check-url", DEFAULT_CHECK_URL);
         config.addDefault("download-url", DEFAULT_DOWNLOAD_URL);
         config.addDefault("download-directory", "updates");

@@ -49,6 +49,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.stream.Stream;
@@ -56,6 +58,7 @@ import java.util.stream.Stream;
 public class OneWorldCoreStart {
     private static final String LEGACY_CLASS_PATH_PREFIX = "-DlegacyClassPath=";
     private static final Set<String> FILTERED_LEGACY_MODULES = Set.of("org.yaml.snakeyaml");
+    private static final Pattern UPDATE_JAR_PATTERN = Pattern.compile("oneworldcore-([0-9][0-9A-Za-z._-]*)\\.jar", Pattern.CASE_INSENSITIVE);
 
     private static final String ANSI_RESET = "\u001B[0m";
     private static final Map<Character, String[]> LOGO_GLYPHS = Map.of(
@@ -88,6 +91,7 @@ public class OneWorldCoreStart {
         sanitizeLaunchArgs();
         OneWorldCoreConfigUtil.init();
         OneWorldCoreConfigUtil.i18n();
+        applyDownloadedUpdateOnStartup();
         if (i18n.isCN()) {
             Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
         }
@@ -153,6 +157,151 @@ public class OneWorldCoreStart {
         }
         String[] args_ = Stream.concat(forgeArgs.stream(), mainArgs.stream()).toArray(String[]::new);
         BootstrapLauncher.main(args_);
+    }
+
+    private static void applyDownloadedUpdateOnStartup() throws IOException {
+        if (!OneWorldCoreConfigUtil.CHECK_UPDATE() || !OneWorldCoreConfigUtil.APPLY_DOWNLOADED_UPDATE_ON_START()) {
+            return;
+        }
+
+        File currentJar = jarTool.getFile();
+        if (currentJar == null || !currentJar.isFile()) {
+            return;
+        }
+
+        File updatesDirectory = new File(OneWorldCoreConfigUtil.UPDATE_DOWNLOAD_DIRECTORY());
+        File updateJar = findLatestDownloadedUpdate(updatesDirectory, getVersion());
+        if (updateJar == null) {
+            return;
+        }
+
+        System.out.println("[OneWorldCore] Applying downloaded update " + updateJar.getName() + " to " + currentJar.getName());
+        Path script = writeUpdateApplyScript(updateJar, currentJar);
+        new ProcessBuilder("cmd", "/c", "start", "\"OneWorldCore Update\"", "/min", script.toAbsolutePath().toString())
+                .directory(new File("."))
+                .start();
+        System.exit(0);
+    }
+
+    private static File findLatestDownloadedUpdate(File updatesDirectory, String currentVersion) {
+        if (updatesDirectory == null || !updatesDirectory.isDirectory()) {
+            return null;
+        }
+
+        File[] updateFiles = updatesDirectory.listFiles(file -> file.isFile() && UPDATE_JAR_PATTERN.matcher(file.getName()).matches());
+        if (updateFiles == null || updateFiles.length == 0) {
+            return null;
+        }
+
+        File latestFile = null;
+        String latestVersion = null;
+        for (File updateFile : updateFiles) {
+            Matcher matcher = UPDATE_JAR_PATTERN.matcher(updateFile.getName());
+            if (!matcher.matches()) {
+                continue;
+            }
+            String updateVersion = matcher.group(1);
+            if (compareVersions(updateVersion, currentVersion) <= 0) {
+                continue;
+            }
+            if (latestVersion == null || compareVersions(updateVersion, latestVersion) > 0) {
+                latestVersion = updateVersion;
+                latestFile = updateFile;
+            }
+        }
+        return latestFile;
+    }
+
+    private static Path writeUpdateApplyScript(File updateJar, File currentJar) throws IOException {
+        long pid = ProcessHandle.current().pid();
+        File workingDirectory = new File(".").getAbsoluteFile();
+        File startBat = new File(workingDirectory, "start.bat");
+        String javaExecutable = Path.of(System.getProperty("java.home"), "bin", isWindows() ? "java.exe" : "java").toAbsolutePath().toString();
+        String appArgs = quoteArgs(mainArgs);
+        Path script = workingDirectory.toPath().resolve("oneworldcore-apply-update.bat");
+
+        String content = """
+                @echo off
+                chcp 65001 >nul
+                set "PID=%s"
+                set "SRC=%s"
+                set "DST=%s"
+                set "WORKDIR=%s"
+                set "START_BAT=%s"
+                set "JAVA_EXE=%s"
+                :wait_process
+                tasklist /FI "PID eq %%PID%%" /NH | findstr /R /C:"^ *%%PID%% " >nul
+                if not errorlevel 1 (
+                  timeout /t 1 /nobreak >nul
+                  goto wait_process
+                )
+                copy /Y "%%SRC%%" "%%DST%%" >nul
+                if errorlevel 1 exit /b 1
+                del /F /Q "%%SRC%%" >nul 2>nul
+                if exist "%%START_BAT%%" (
+                  start "" /D "%%WORKDIR%%" "%%START_BAT%%"
+                ) else (
+                  start "" /D "%%WORKDIR%%" "%%JAVA_EXE%%" -jar "%%DST%%" %s
+                )
+                del /F /Q "%%~f0" >nul 2>nul
+                exit /b 0
+                """.formatted(
+                pid,
+                updateJar.getAbsolutePath(),
+                currentJar.getAbsolutePath(),
+                workingDirectory.getAbsolutePath(),
+                startBat.getAbsolutePath(),
+                javaExecutable,
+                appArgs
+        );
+        Files.writeString(script, content);
+        return script;
+    }
+
+    private static String quoteArgs(List<String> args) {
+        if (args == null || args.isEmpty()) {
+            return "";
+        }
+        return args.stream()
+                .map(arg -> "\"" + arg.replace("\"", "\\\"") + "\"")
+                .reduce((left, right) -> left + " " + right)
+                .orElse("");
+    }
+
+    private static boolean isWindows() {
+        return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
+    }
+
+    private static int compareVersions(String left, String right) {
+        int[] leftParts = versionParts(left);
+        int[] rightParts = versionParts(right);
+        int length = Math.max(leftParts.length, rightParts.length);
+        for (int index = 0; index < length; index++) {
+            int leftPart = index < leftParts.length ? leftParts[index] : 0;
+            int rightPart = index < rightParts.length ? rightParts[index] : 0;
+            int comparison = Integer.compare(leftPart, rightPart);
+            if (comparison != 0) {
+                return comparison;
+            }
+        }
+        return 0;
+    }
+
+    private static int[] versionParts(String version) {
+        if (version == null) {
+            return new int[0];
+        }
+        return Pattern.compile("[^0-9]+")
+                .splitAsStream(version)
+                .filter(part -> !part.isBlank())
+                .mapToInt(part -> {
+                    try {
+                        return Integer.parseInt(part);
+                    } catch (NumberFormatException ignored) {
+                        return 0;
+                    }
+                })
+                .toArray();
     }
 
     private static void sanitizeLaunchArgs() {

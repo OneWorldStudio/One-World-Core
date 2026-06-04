@@ -76,6 +76,15 @@ public class OneWorldCoreConfigUtil {
         return getUpdateBoolean("enabled", true);
     }
 
+    public static boolean APPLY_DOWNLOADED_UPDATE_ON_START() {
+        return getUpdateBoolean("auto-apply", true);
+    }
+
+    public static String UPDATE_DOWNLOAD_DIRECTORY() {
+        YamlConfiguration updateConfig = loadUpdateConfig();
+        return updateConfig.getString("download-directory", "updates");
+    }
+
     public static boolean aBoolean(String key, boolean defaultReturn) {
         if (yml.get(key) == null && key.startsWith("oneworldcore.")) {
             String studioKey = "oneworldstudio." + key.substring("oneworldcore.".length());
@@ -239,9 +248,16 @@ public class OneWorldCoreConfigUtil {
     }
 
     private static boolean getUpdateBoolean(String key, boolean defaultValue) {
+        YamlConfiguration updateConfig = loadUpdateConfig();
+        return updateConfig.getBoolean(key, defaultValue);
+    }
+
+    private static YamlConfiguration loadUpdateConfig() {
         YamlConfiguration updateConfig = YamlConfiguration.loadConfiguration(UPDATE_YML);
         updateConfig.addDefault("enabled", true);
         updateConfig.addDefault("auto-download", false);
+        updateConfig.addDefault("auto-apply", true);
+        updateConfig.addDefault("download-directory", "updates");
         updateConfig.options().copyDefaults(true);
         try {
             if (!UPDATE_YML.getParentFile().exists()) {
@@ -250,7 +266,7 @@ public class OneWorldCoreConfigUtil {
             updateConfig.save(UPDATE_YML);
         } catch (Exception ignored) {
         }
-        return updateConfig.getBoolean(key, defaultValue);
+        return updateConfig;
     }
 
     private static String getStringCompat(String modernKey, String secondaryKey, String legacyKey, String defaultValue) {
