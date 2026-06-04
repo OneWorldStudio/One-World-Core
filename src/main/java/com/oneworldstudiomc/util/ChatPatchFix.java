@@ -2,6 +2,7 @@ package com.oneworldstudiomc.util;
 
 import com.oneworldstudiomc.ai.koukou.KouKou;
 import io.papermc.paper.chat.ChatRenderer;
+import java.io.File;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -15,6 +16,9 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_20_R1.util.LazyPlayerSet;
 import org.bukkit.craftbukkit.v1_20_R1.util.Waitable;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -37,6 +41,13 @@ public class ChatPatchFix {
         } else if (packetListener.player.getChatVisibility() != ChatVisiblity.SYSTEM) {
             org.bukkit.entity.Player thisPlayer = packetListener.getCraftPlayer();
             AsyncPlayerChatEvent event = new AsyncPlayerChatEvent(async, thisPlayer, s, new LazyPlayerSet(packetListener.server));
+            String essentialsChatFormat = getEssentialsChatFormat(thisPlayer);
+            if (essentialsChatFormat != null) {
+                try {
+                    event.setFormat(essentialsChatFormat);
+                } catch (RuntimeException ignored) {
+                }
+            }
             String originalFormat = event.getFormat();
             String originalMessage = event.getMessage();
             Bukkit.getPluginManager().callEvent(event);
@@ -146,7 +157,7 @@ public class ChatPatchFix {
             String originalMessage
     ) {
         boolean hasPaperListeners = io.papermc.paper.event.player.AsyncChatEvent.getHandlerList().getRegisteredListeners().length != 0;
-        String essentialsChatFormat = getEssentialsChatFormat();
+        String essentialsChatFormat = getEssentialsChatFormat(source);
         if (!hasPaperListeners
                 && lazyRecipients
                 && !org.spigotmc.SpigotConfig.bungee
@@ -244,7 +255,7 @@ public class ChatPatchFix {
         return ChatColor.translateAlternateColorCodes('&', rendered);
     }
 
-    private static String getEssentialsChatFormat() {
+    private static String getEssentialsChatFormat(org.bukkit.entity.Player player) {
         Plugin essentialsChat = Bukkit.getPluginManager().getPlugin("EssentialsChat");
         if (essentialsChat == null) {
             essentialsChat = Bukkit.getPluginManager().getPlugin("EssentialsXChat");
@@ -254,14 +265,57 @@ public class ChatPatchFix {
         }
 
         Plugin essentials = Bukkit.getPluginManager().getPlugin("Essentials");
-        if (!(essentials instanceof JavaPlugin javaPlugin) || !javaPlugin.isEnabled()) {
+        String format = null;
+        if (essentials instanceof JavaPlugin javaPlugin && javaPlugin.isEnabled()) {
+            format = readEssentialsChatFormat(javaPlugin.getConfig(), player);
+            if (format == null) {
+                format = readEssentialsChatFormat(loadPluginConfig(javaPlugin), player);
+            }
+        }
+        if (format == null && essentialsChat instanceof JavaPlugin javaPlugin) {
+            format = readEssentialsChatFormat(javaPlugin.getConfig(), player);
+            if (format == null) {
+                format = readEssentialsChatFormat(loadPluginConfig(javaPlugin), player);
+            }
+        }
+        return format;
+    }
+
+    private static FileConfiguration loadPluginConfig(JavaPlugin plugin) {
+        File configFile = new File(plugin.getDataFolder(), "config.yml");
+        return configFile.isFile() ? YamlConfiguration.loadConfiguration(configFile) : null;
+    }
+
+    private static String readEssentialsChatFormat(FileConfiguration config, org.bukkit.entity.Player player) {
+        if (config == null) {
             return null;
         }
 
-        String format = javaPlugin.getConfig().getString("chat.format");
+        String format = getGroupFormat(config, player);
+        if (format == null) {
+            format = config.getString("chat.format");
+        }
         if (format == null || format.isBlank()) {
-            format = javaPlugin.getConfig().getString("format");
+            format = config.getString("format");
         }
         return format == null || format.isBlank() ? null : format;
+    }
+
+    private static String getGroupFormat(FileConfiguration config, org.bukkit.entity.Player player) {
+        ConfigurationSection groupFormats = config.getConfigurationSection("chat.group-formats");
+        if (groupFormats == null) {
+            groupFormats = config.getConfigurationSection("group-formats");
+        }
+        if (groupFormats == null) {
+            return null;
+        }
+
+        for (String group : groupFormats.getKeys(false)) {
+            String format = groupFormats.getString(group);
+            if (format != null && !format.isBlank() && player.hasPermission("essentials.chat.group." + group)) {
+                return format;
+            }
+        }
+        return null;
     }
 }
