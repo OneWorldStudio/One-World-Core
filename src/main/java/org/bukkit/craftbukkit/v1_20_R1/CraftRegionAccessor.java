@@ -591,6 +591,8 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
     @SuppressWarnings("unchecked")
     public <T extends Entity> T addEntity(net.minecraft.world.entity.Entity entity, CreatureSpawnEvent.SpawnReason reason, Consumer<T> function, boolean randomizeData) throws IllegalArgumentException {
         Preconditions.checkArgument(entity != null, "Cannot spawn null entity");
+        T bukkitEntity = (T) entity.getBukkitEntity();
+        Preconditions.checkArgument(bukkitEntity != null, "Cannot create Bukkit entity wrapper for %s", entity.getType());
 
         if (randomizeData && entity instanceof Mob) {
             ((Mob) entity).finalizeSpawn(getHandle(), getHandle().getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.COMMAND, (SpawnGroupData) null, null);
@@ -601,11 +603,11 @@ public abstract class CraftRegionAccessor implements RegionAccessor {
         }
 
         if (function != null) {
-            function.accept((T) entity.getBukkitEntity());
+            function.accept(bukkitEntity);
         }
 
         addEntityToWorld(entity, reason);
-        return (T) entity.getBukkitEntity();
+        return bukkitEntity;
     }
 
     public abstract void addEntityToWorld(net.minecraft.world.entity.Entity entity, CreatureSpawnEvent.SpawnReason reason);
