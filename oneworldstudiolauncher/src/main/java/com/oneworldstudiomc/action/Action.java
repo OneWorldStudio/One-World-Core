@@ -29,6 +29,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -41,6 +42,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.JarFile;
 
 public abstract class Action {
 
@@ -131,7 +133,7 @@ public abstract class Action {
 
     protected void copyFileFromJar(File file, String pathInJar) {
         String bundledSha256;
-        try (InputStream is = OneWorldCoreStart.class.getClassLoader().getResourceAsStream(pathInJar)) {
+        try (InputStream is = openBundledResource(pathInJar)) {
             if (is == null) {
                 System.out.println("[OneWorldCore] The file " + file.getName() + " doesn't exist in the OneWorldCore jar!");
                 System.exit(0);
@@ -154,7 +156,7 @@ public abstract class Action {
                 }
             }
             file.getParentFile().mkdirs();
-            try (InputStream is = OneWorldCoreStart.class.getClassLoader().getResourceAsStream(pathInJar)) {
+            try (InputStream is = openBundledResource(pathInJar)) {
                 if (is == null) {
                     System.out.println("[OneWorldCore] The file " + file.getName() + " doesn't exist in the OneWorldCore jar!");
                     System.exit(0);
@@ -168,6 +170,27 @@ public abstract class Action {
                 System.exit(0);
             }
         }
+    }
+
+    private static InputStream openBundledResource(String pathInJar) throws IOException {
+        JarFile jarFile = new JarFile(OneWorldCoreStart.jarTool.getFile());
+        var entry = jarFile.getJarEntry(pathInJar);
+        if (entry != null) {
+            InputStream jarStream = jarFile.getInputStream(entry);
+            return new FilterInputStream(jarStream) {
+                @Override
+                public void close() throws IOException {
+                    try {
+                        super.close();
+                    } finally {
+                        jarFile.close();
+                    }
+                }
+            };
+        }
+
+        jarFile.close();
+        return OneWorldCoreStart.class.getClassLoader().getResourceAsStream(pathInJar);
     }
 
     public boolean needsInstall() throws IOException {
