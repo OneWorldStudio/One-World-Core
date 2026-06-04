@@ -465,6 +465,31 @@ public class PluginFixManager {
         return null;
     }
 
+    public static Method findMethodByNameAndParameterCountCompat(Class<?> owner, String name, int parameterCount) {
+        if (owner == null) {
+            return null;
+        }
+
+        Class<?> cursor = owner;
+        while (cursor != null && cursor != Object.class) {
+            for (Method method : cursor.getDeclaredMethods()) {
+                if (method.getName().equals(name) && method.getParameterCount() == parameterCount) {
+                    method.setAccessible(true);
+                    return method;
+                }
+            }
+            cursor = cursor.getSuperclass();
+        }
+
+        for (Method method : owner.getMethods()) {
+            if (method.getName().equals(name) && method.getParameterCount() == parameterCount) {
+                method.setAccessible(true);
+                return method;
+            }
+        }
+        return null;
+    }
+
     public static Method needMethodCompat(Class<?> owner, String name, Class<?>... parameterTypes) {
         Method method = findMethodCompat(owner, name, parameterTypes);
         if (method == null && "asBukkitCopy".equals(name)) {
@@ -1500,6 +1525,7 @@ public class PluginFixManager {
             case "io.lumine.mythic.bukkit.adapters.BukkitParticle" -> PluginFixManager::fixMythicBukkitParticleCompat;
             case "io.lumine.mythic.bukkit.entities.BukkitHusk" -> PluginFixManager::fixMythicBukkitHusk;
             case "io.lumine.mythic.bukkit.entities.BukkitBabyZombieVillager" -> PluginFixManager::fixMythicBabyZombieVillager;
+            case "io.lumine.mythic.core.mobs.ActiveMob" -> PluginFixManager::fixMythicActiveMob;
             case "io.lumine.mythic.bukkit.commands.items.GiveCommand" -> PluginFixManager::fixMythicMobsGiveCommand;
             case "io.lumine.mythic.core.volatilecode.v1_20_R1.VolatileAIHandlerImpl" -> PluginFixManager::fixMythicMobsAIHandler;
             case "io.lumine.mythic.core.volatilecode.v1_20_R1.VolatileEntityHandlerImpl" -> PluginFixManager::fixMythicMobsEntityHandler;
@@ -3698,6 +3724,32 @@ public class PluginFixManager {
                 replacement.add(new InsnNode(Opcodes.ARETURN));
                 methodNode.instructions = replacement;
                 methodNode.tryCatchBlocks.clear();
+                clearLocalDebugInfo(methodNode);
+            }
+        }
+    }
+
+    private static void fixMythicActiveMob(ClassNode node) {
+        for (MethodNode methodNode : node.methods) {
+            if (!"loadSaved".equals(methodNode.name) || !"()Z".equals(methodNode.desc)) {
+                continue;
+            }
+
+            for (AbstractInsnNode insn = methodNode.instructions.getFirst(); insn != null; insn = insn.getNext()) {
+                if (insn.getOpcode() != Opcodes.IRETURN) {
+                    continue;
+                }
+
+                InsnList toInject = new InsnList();
+                toInject.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                toInject.add(new MethodInsnNode(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(PluginFixManager.class),
+                        "mythicScheduleLoadedMobLoadRetryCompat",
+                        "(Ljava/lang/Object;)V",
+                        false
+                ));
+                methodNode.instructions.insertBefore(insn, toInject);
                 clearLocalDebugInfo(methodNode);
             }
         }
@@ -7276,6 +7328,64 @@ public class PluginFixManager {
         }
 
         return husk;
+    }
+
+    public static void mythicScheduleLoadedMobLoadRetryCompat(Object activeMob) {
+        if (activeMob == null) {
+            return;
+        }
+
+        try {
+            org.bukkit.plugin.Plugin plugin = org.bukkit.Bukkit.getPluginManager().getPlugin("MythicMobs");
+            if (plugin == null || !plugin.isEnabled()) {
+                return;
+            }
+
+            org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> mythicReplayLoadedMobLoadCompat(activeMob), 20L);
+            org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> mythicReplayLoadedMobLoadCompat(activeMob), 60L);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    private static void mythicReplayLoadedMobLoadCompat(Object activeMob) {
+        if (activeMob == null) {
+            return;
+        }
+
+        try {
+            org.bukkit.plugin.Plugin plugin = org.bukkit.Bukkit.getPluginManager().getPlugin("MythicMobs");
+            if (plugin == null || !plugin.isEnabled()) {
+                return;
+            }
+
+            Method validateLoadedMob = activeMob.getClass().getMethod("validateLoadedMob");
+            Object valid = validateLoadedMob.invoke(activeMob);
+            if (!(valid instanceof Boolean validMob) || !validMob) {
+                return;
+            }
+
+            ClassLoader loader = activeMob.getClass().getClassLoader();
+            Class<?> mythicBukkitClass = Class.forName("io.lumine.mythic.bukkit.MythicBukkit", false, loader);
+            Object mythicBukkit = mythicBukkitClass.getMethod("inst").invoke(null);
+            Object skillManager = mythicBukkit.getClass().getMethod("getSkillManager").invoke(mythicBukkit);
+            Object eventBus = skillManager.getClass().getMethod("getEventBus").invoke(skillManager);
+
+            Class<?> skillTriggersClass = Class.forName("io.lumine.mythic.core.skills.SkillTriggers", false, loader);
+            Object loadTrigger = skillTriggersClass.getField("LOAD").get(null);
+            Method buildSkillMetadata = findMethodByNameAndParameterCountCompat(eventBus.getClass(), "buildSkillMetadata", 5);
+            Method processTriggerMechanics = findMethodByNameAndParameterCountCompat(eventBus.getClass(), "processTriggerMechanics", 1);
+            if (buildSkillMetadata == null || processTriggerMechanics == null) {
+                return;
+            }
+
+            buildSkillMetadata.setAccessible(true);
+            processTriggerMechanics.setAccessible(true);
+            Object metadata = buildSkillMetadata.invoke(eventBus, loadTrigger, activeMob, null, null, false);
+            if (metadata != null) {
+                processTriggerMechanics.invoke(eventBus, metadata);
+            }
+        } catch (Throwable ignored) {
+        }
     }
 
     private static net.minecraft.network.chat.Component parseEntityCustomNameCompat(String customName) {
