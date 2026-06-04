@@ -25,4 +25,7 @@ Progress
     * [x] Spigot ([**d2eba2c8**](https://hub.spigotmc.org/stash/projects/SPIGOT/repos/spigot/commits/d2eba2c8))
         * [x] Bukkit-Patches
         * [x] CraftBukkit-Patches
+    * [x] Paper ([paper_commit_hash](https://github.com/PaperMC/Paper/commit/paper_commit_hash))
+        * [x] Paper-API-Patches ([patch](https://github.com/PaperMC/Paper/blob/paper_commit_hash/patches/api/0001-example.patch))
+        * [x] Paper-Server-Patches ([patch](https://github.com/PaperMC/Paper/blob/paper_commit_hash/patches/server/0001-example.patch))
 
