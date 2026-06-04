@@ -25,4 +25,6 @@ Progress
     * [x] Spigot ([**d2eba2c8**](https://hub.spigotmc.org/stash/projects/SPIGOT/repos/spigot/commits/d2eba2c8))
         * [x] Bukkit-Patches
         * [x] CraftBukkit-Patches
+    * [x] Paper ([**3cb8529bd**](https://github.com/PaperMC/Paper-archive/commit/3cb8529bd))
+
 
